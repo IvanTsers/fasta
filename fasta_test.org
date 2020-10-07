@@ -1,0 +1,241 @@
+#+begin_src latex
+  \section{Testing}
+  We import the \texttt{testing} package and add a hook for further
+  imports and for functions.
+#+end_src
+#+begin_src go <<fasta_test.go>>=
+  package fasta
+
+  import (
+	  "testing"
+	  //<<Testing imports>>
+  )
+  //<<Testing functions>>
+#+end_src
+#+begin_src latex
+  \subsection{\texttt{Sequence}}
+  \subsubsection{Method \texttt{Equals}}
+  We start by testing \texttt{Equals}.
+#+end_src
+#+begin_src go <<Testing functions>>=
+  func TestEquals(t *testing.T) {
+	  //<<Test \texttt{Equals}>>
+  }
+#+end_src
+#+begin_src latex
+  First, compare two identical sequences.
+#+end_src
+#+begin_src go <<Test \texttt{Equals}>>=
+  d1 := []byte("ACCGT")
+  s1 := NewSequence("s1", d1)
+  s2 := NewSequence("s1", d1)
+  if !(s1.Equals(s2) && s2.Equals(s1)) {
+	  t.Error("equal sequences declared unequal")
+  }
+#+end_src
+#+begin_src latex
+  Now compare two sequences with different headers.
+#+end_src
+#+begin_src go <<Test \texttt{Equals}>>=
+  s3 := NewSequence("s3", d1)
+  if s1.Equals(s3) || s3.Equals(s1) {
+	  t.Error("sequences with unequal headers declared equal")
+  }
+#+end_src
+#+begin_src latex
+  As a last test of \texttt{Equals}, we compare a pair of sequences with
+  differing data.
+#+end_src
+#+begin_src go <<Test \texttt{Equals}>>=
+  d2 := []byte("ACGGT")
+  s4 := NewSequence("s1", d2)
+  if s1.Equals(s4) || s4.Equals(s1) {
+	  t.Error("sequences with unequal data declared equal")
+  }
+#+end_src
+#+begin_src latex
+  \subsubsection{Method \texttt{String}}
+  We declare \texttt{TestString}.
+#+end_src
+#+begin_src go <<Testing functions>>=
+  func TestString(t *testing.T) {
+	  //<<Test \texttt{String}>>
+  }
+#+end_src
+#+begin_src latex
+  In it we use \texttt{String} to write a \texttt{Sequence} to file,
+  which is then retrieved and checked.
+#+end_src
+#+begin_src go <<Test \texttt{String}>>=
+  //<<Write a \texttt{Sequence} to file>>
+  //<<Read the \texttt{Sequence} from file>>
+  //<<Check the \texttt{Sequence}>>
+#+end_src
+#+begin_src latex
+  We construct a sequence with a line length less than the sequence
+  length and write it to a new temporary file.
+#+end_src
+#+begin_src go <<Write a \texttt{Sequence} to file>>=
+  s1 := NewSequence("s1", []byte("ACCGT"))
+  s1.LineLength = 4
+  f, _ := ioutil.TempFile("", "test_*")
+  fmt.Fprintf(f, "%s\n", s1)
+  f.Close()
+#+end_src
+#+begin_src latex
+  We import the packages \texttt{ioutil} and \texttt{fmt}.
+#+end_src
+#+begin_src go <<Testing imports>>=
+  "io/ioutil"
+  "fmt"
+#+end_src
+#+begin_src latex
+  The sequence is read as a byte slice from the file and split at the
+  newlines. As we're done with the file at this point, we remove it.
+#+end_src
+#+begin_src go <<Read the \texttt{Sequence} from file>>=
+  b1, _ := ioutil.ReadFile(f.Name())
+  b2 := bytes.Split(b1, []byte("\n"))
+  os.Remove(f.Name())
+#+end_src
+#+begin_src latex
+  The packages \texttt{bytes} and \texttt{os} are new.
+#+end_src
+#+begin_src go <<Testing imports>>=
+  "bytes"
+  "os"
+#+end_src
+#+begin_src latex
+  When checking the \texttt{Sequence}, we start with the header, then
+  look at the data, and finally test the formatting.
+#+end_src
+#+begin_src go <<Check the \texttt{Sequence}>>=
+  //<<Check header>>
+  //<<Check data>>
+  //<<Check formatting>>
+#+end_src
+#+begin_src latex
+  The headers are compared as strings.
+#+end_src
+#+begin_src go <<Check header>>=
+  if string(b2[0][1:]) != s1.Header {
+	  t.Errorf("did not write header correctly; want %q; get %q\n",
+		  string(b2[0][1:]), s1.Header)
+  }
+#+end_src
+#+begin_src latex
+  The data is checked byte-wise.
+#+end_src
+#+begin_src go <<Check data>>=
+  var counter int
+  for i, s := range b2 {
+	  if i < 1 {
+		  continue
+	  }
+	  for _, c := range s {
+		  if c != s1.Data[counter] {
+			  t.Error("did not write data correctly")
+		  }
+		  counter++
+	  }
+  }
+#+end_src
+#+begin_src latex
+  The formatting is correct, if the first line of data is four
+  nucleotides long.
+#+end_src
+#+begin_src go <<Check formatting>>=
+if len(b2[1]) != 4 {
+	t.Error("did not format data correctly")
+}
+#+end_src
+#+begin_src latex
+  \subsection{\texttt{Scanner}}
+  The \texttt{Scanner} is tested by reading and writing a set of files,
+  which cover the following cases:
+  \begin{center}
+    \begin{tabular}{ll}
+      \hline
+      Name & Content\\\hline
+      \texttt{seq1.fasta} & empty\\
+      \texttt{seq2.fasta} & empty header, no data\\
+      \texttt{seq3.fasta} & header, no data\\
+      \texttt{seq4.fasta} & 1 sequence with 5 nucleotides\\
+      \texttt{seq5.fasta} & 2 sequences with 70 nucleotides each\\
+      \texttt{seq6.fasta} & 2 sequences with 140 nucleotides each\\
+      \texttt{seq7.fasta} & 5 sequences with 700 nucleotides each\\
+      \texttt{seq8.fasta} & 5 sequences with 1000 nucleotides each\\
+      \hline
+      \end{tabular}
+  \end{center}
+  We read each of these eight files, write the sequences to file, and
+  compare the copy with the original.
+#+end_src
+#+begin_src go <<Testing functions>>=
+  func TestScanner(t *testing.T) {
+	  //<<Store sequence lengths>>
+	  var c int
+	  for i := 1; i <= 1; i++ {
+		  //<<Open files>>
+		  //<<Read and write files>>
+		  //<<Compare files>>
+	  }
+  }
+#+end_src
+#+begin_src latex
+  The sequence lengths are entered ``manually''. 
+#+end_src
+#+begin_src go <<Store sequence lengths>>=
+  lengths := []int{
+	  0, 0, 0,
+	  5, 70, 70,
+	  140, 140,
+	  700, 700, 700, 700, 700,
+	  1000, 1000, 1000, 1000, 1000}
+#+end_src
+#+begin_src latex
+  Open the input and output files.
+#+end_src
+#+begin_src go <<Open files>>=
+  name := "./data/seq" + strconv.Itoa(i) + ".fasta"
+  in, err := os.Open(name)
+  if err != nil {
+	  t.Errorf("couldn't open %q\n", name)
+  }
+  out, _ := ioutil.TempFile("", "test_*")
+#+end_src
+#+begin_src latex
+  We import  \texttt{strconv}.
+#+end_src
+#+begin_src go <<Testing imports>>=
+  "strconv"
+#+end_src
+#+begin_src latex
+  Sequences are read via a \texttt{Scanner} and written by implicit
+  calls to \texttt{Sequence}.
+#+end_src
+#+begin_src go <<Read and write files>>=
+  scanner := NewScanner(in)
+  for scanner.ScanSequence() {
+	  seq := scanner.Sequence()
+	  fmt.Fprintf(out, "%s\n", seq)
+	  if seq.Ends[0] != lengths[c] {
+		  t.Errorf("want Ends[0]: %d; get: %d\n", seq.Ends[0], lengths[c])
+	  }
+	  c++
+  }
+  in.Close()
+  out.Close()
+#+end_src
+#+begin_src latex
+  To compare files, their contents are compared. The temporary output
+  file isn't needed any more after this, so we delete it.
+#+end_src
+#+begin_src go <<Compare files>>=
+  id, _ := ioutil.ReadFile(name)
+  od, _ := ioutil.ReadFile(out.Name())
+  if !bytes.Equal(id, od) {
+	  t.Errorf("failed reading %q\n", name)
+  }
+  os.Remove(out.Name())
+#+end_src

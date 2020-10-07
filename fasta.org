@@ -1,0 +1,436 @@
+#+begin_src latex
+  \section{Introduction}
+  The FASTA file format is widely used in molecular biology for storing
+  nucleotide and protein sequences. As an example, Figure~\ref{fig:fas}
+  shows the first five lines of the genomes of two \emph{Escherichia
+    coli} strains. \emph{E. coli} is a bacterium that lives in the guts
+  of warm-blooded animals, including our own. Each sequence depicted
+  consists of a header line starting with a \verb+>+. There are no
+  generally accepted rules as to what might follow that first character,
+  but our example headers contain the GenBank accession numbers,
+  AE005174.2 and AE014075.1, and the \emph{E. coli} strains, EDL933 and
+  CFT073. The header is followed by the actual sequence data in lines 70
+  residues long. Line length is a convention often flouted, some FASTA
+  files have lines shorter than 70, in others the data is in a single
+  line.
+
+  This data can be very long. The genome of our first example strain
+  EDL933 consists of 5,528,445 nucleotides in 78,978 lines. Similarly,
+  the genome of the second example strain has 5,231,428 nucleotides in
+  74,735 lines. Still, \emph{E. coli} genomes are tiny compared to our
+  three billion nucleotides. Efficiency is thus important when designing
+  a package for dealing with sequence data.
+
+
+  \begin{figure}
+  \begin{verbatim}
+  >AE005174.2 Escherichia coli O157:H7 str. EDL933 genome
+  AGCTTTTCATTCTGACTGCAACGGGCAATATGTCTCTGTGTGGATTAAAAAAAGAGTCTCTGACAGCAGC
+  TTCTGAACTGGTTACCTGCCGTGAGTAAATTAAAATTTTATTGACTTAGGTCACTAAATACTTTAACCAA
+  TATAGGCATAGCGCACAGACAGATAAAAATTACAGAGTACACAACATCCATGAAACGCATTAGCACCACC
+  ATTACCACCACCATCACCACCACCATCACCATTACCATTACCACAGGTAACGGTGCGGGCTGACGCGTAC
+  ...
+  \end{verbatim}
+  \begin{verbatim}
+  >AE014075.1 Escherichia coli CFT073, complete genome
+  AGCTTTTCATTCTGACTGCAACGGGCAATATGTCTCTGTGTGGATTAAAAAAAGAGTGTCTGATAGCAGC
+  TTCTGAACTGGTTACCTGCCGTGAGTAAATTAAAATTTTATTGACTTAGGTCACTAAATACTTTAACCAA
+  TATAGGCATAGCGCACAGACAGATAAAAATTACAGAGTACACAACATCCATGAAACGCATTAGCACCACC
+  ATTACCACCACCATCACCATTACCACAGGTAACGGTGCGGGCTGACGCGTACAGGAAACACAGAAAAAAG
+  ...
+  \end{verbatim}
+  \caption{Example FASTA file of two \emph{E. coli} genomes.}\label{fig:fas}
+  \end{figure}
+
+  !Package \texttt{fasta} implements data structures and functions for
+  !reading, writing, and manipulating sequences in FASTA format.
+#+end_src
+#+begin_src go <<fasta.go>>=
+  package fasta
+  import (
+	  //<<Imports>>
+  )
+  const (
+	  //<<Constants>>
+  )
+  //<<Data structures>>
+  //<<Methods>>
+  //<<Functions>>
+#+end_src
+#+begin_src latex
+  The package is centered on two data structures, \texttt{Sequence} for
+  storing a sequence, and \texttt{Scanner} for parsing data.
+  \section{Structure \texttt{Sequence}}
+  !The \texttt{Sequence} structure consists of a header and the actual
+  !sequence data. This data describes $n$ molecules, which are accessed
+  !\texttt{Data[0:Ends[0]]}, etc.
+  A sequence is printed with data lines of length \texttt{LineLength} or
+  less.
+
+#+end_src
+#+begin_src go <<Data structures>>=
+  type Sequence struct {
+	  Header string
+	  Data []byte
+	  Ends []int
+	  LineLength int
+  }
+#+end_src
+#+begin_src latex
+  \subsection{Function \texttt{NewSequence}}
+  !Function NewSequence returns a new Sequence.
+  It takes as argument a header and sequence data, and sets the
+  appropriate value in \texttt{Ends}. It also initializes
+  \texttt{LineLength} to its default value.
+#+end_src
+#+begin_src go <<Functions>>=
+  func NewSequence(h string, d []byte) *Sequence {
+	  s := new(Sequence)
+	  s.Header = h
+	  s.Data = append(s.Data, d...)
+	  s.Ends = append(s.Ends, len(d))
+	  s.LineLength = DefaultLineLength
+	  return s
+  }
+#+end_src
+#+begin_src latex
+  The default line length is a constant we set to the widely used value
+  of 70.
+#+end_src
+#+begin_src go <<Constants>>=
+DefaultLineLength = 70
+#+end_src
+#+begin_src latex
+  \subsection{Method \texttt{Equals}}
+  !\texttt{Equals} compares two sequences and returns true if their Headers, Data,
+  !and Ends are identical.
+  The field \texttt{LineLength} is not compared, as this is not an
+  essential aspect of the \texttt{Sequence}.
+#+end_src
+#+begin_src go <<Methods>>=
+  func (a *Sequence) Equals(b *Sequence) bool {
+	  //<<Test \texttt{Header}>>
+	  //<<Test \texttt{Data}>>
+	  //<<Test \texttt{Ends}>>
+	  return true
+  }
+#+end_src
+#+begin_src latex
+  Strings are comparable.
+#+end_src
+#+begin_src go <<Test \texttt{Header}>>=
+  if a.Header != b.Header {
+	  return false
+  }
+#+end_src
+#+begin_src latex
+  \texttt{Data} is a byte slice, which can only be compared
+  byte-wise. But before we go to that trouble, we check that the slices
+  are the same length.
+#+end_src
+#+begin_src go <<Test \texttt{Data}>>=
+  if len(a.Data) != len(b.Data) {
+	  return false
+  }
+  return bytes.Equal(a.Data, b.Data)
+#+end_src
+#+begin_src latex
+  We import \texttt{bytes}.
+#+end_src
+#+begin_src go <<Imports>>=
+  "bytes"
+#+end_src
+#+begin_src latex
+  Similarly, we compare \texttt{Ends} element-wise.
+#+end_src
+#+begin_src go <<Test \texttt{Ends}>>=
+  if len(a.Ends) != len(b.Ends) {
+	  return false
+  }
+  for i, v := range a.Ends {
+	  if v != b.Ends[i] {
+		  return false
+	  }
+  }
+#+end_src
+#+begin_src latex
+  \subsection{Method \texttt{String}}
+  Writing a \texttt{Sequence} is delegated the to its \texttt{String} method.
+  !\texttt{String} wraps the sequence into lines at most \texttt{LineLength} characters long.
+  We construct the final string from an intermediate byte slice, into
+  which we copy the header and the data. The data is
+  interspersed with newlines. If this results in a terminal
+  newline, it's removed. Finally, return the new string.
+#+end_src
+#+begin_src go <<Methods>>=
+  func (s *Sequence) String() string {
+	  var b []byte
+	  //<<Store header>>
+	  //<<Store data>>
+	  //<<Remove terminal newline>>
+	  //<<Return string>>
+  }
+#+end_src
+#+begin_src latex
+  If present, the header is stored and terminated by a newline.
+#+end_src
+#+begin_src go <<Store header>>=
+  if len(s.Header) > 0 {
+	  b = append(b, '>')
+	  b = append(b, s.Header...)
+	  b = append(b, '\n')
+  }
+#+end_src
+#+begin_src latex
+  The data is copied byte-wise and decorated with newlines.
+#+end_src
+#+begin_src go <<Store data>>=
+  var c int
+  for _, r := range s.Data {
+	  b = append(b, r)
+	  c++
+	  if c == s.LineLength {
+		  c = 0
+		  b = append(b, '\n')
+	  }
+  }
+#+end_src
+#+begin_src latex
+  If we have just added a terminal newline, this gets removed again. But
+  only, if anything was added to the buffer in the first place.
+#+end_src
+#+begin_src go <<Remove terminal newline>>=
+  if c == 0  && len(b) > 0 {
+	  b = b[:len(b)-1]
+  }
+#+end_src
+#+begin_src latex
+  When returning the final string, we need to make sure the buffer,
+  \texttt{b}, actually contains some data. If not, we return the empty
+  string.
+#+end_src
+#+begin_src go <<Return string>>=
+  if len(b) > 0 {
+	  return string(b)
+  } else {
+	  return ""
+  }
+#+end_src
+#+begin_src latex
+  \section{Structure \texttt{Scanner}}
+  !A \texttt{Sequence} is read using a \texttt{Scanner}.
+  It wraps a
+  \texttt{bufio.Scanner} and we aim to make our scanner behave like
+  the example set by the library. So we declare
+  a \texttt{bufio.Scanner} 
+  and add a hook for any additional
+  fields we might need later on.
+#+end_src
+#+begin_src go <<Data structures>>=
+  type Scanner struct {
+	  s *bufio.Scanner
+	  //<<Scanner fields>>
+  }
+#+end_src
+#+begin_src latex
+  We import \texttt{bufio}.
+#+end_src
+#+begin_src go <<Imports>>=
+  "bufio"
+#+end_src
+#+begin_src latex
+  When parsing a FASTA file, we either read it line by line or sequence
+  by sequence. We first deal with lines, then sequences.
+  \subsection{Method \texttt{ScanLine}}
+  !\texttt{ScanLine} reads input line by line. It skips
+  !empty lines and marks headers.
+#+end_src
+#+begin_src go <<Methods>>=
+  func (s *Scanner) ScanLine() bool {
+	  for s.s.Scan() {
+		  b := s.s.Bytes()
+		  //<<Found header?>>
+	  }
+	  return false
+  }
+#+end_src
+#+begin_src latex
+  Whenever we find a line that is not empty, we decide whether or not
+  it's a header and send a signal by returning \texttt{true}.
+#+end_src
+#+begin_src go <<Found header?>>=
+  if len(b) > 0 {
+	  if b[0] == '>' {
+		  s.IsHeader = true
+	  } else {
+		  s.IsHeader = false
+	  }
+	  return true
+  }
+#+end_src
+#+begin_src latex
+  We have used the scanner field \texttt{IsHeader}.
+#+end_src
+#+begin_src go <<Scanner fields>>=
+  IsHeader bool
+#+end_src
+#+begin_src latex
+  So far, we have only \emph{parsed} a line; we still need a method to
+  \emph{retrieve} it.
+  \subsection{Method \texttt{Line}}
+  !\texttt{Line} returns the last non-empty line scanned.
+#+end_src
+#+begin_src go <<Methods>>=
+  func (s *Scanner) Line() []byte {
+	  return s.s.Bytes()
+  }
+#+end_src
+#+begin_src latex
+  \subsection{Method \texttt{ScanSequence}}
+  ! \texttt{ScanSequence} reads input \texttt{Sequence} by \texttt{Sequence}.
+  For this we take another look at the structure of a FASTA file. As
+  sketched in Figure~\ref{fig:fas2}, each entry in a FASTA file begins
+  with a header. With one exception, each of these headers not only
+  starts the next sequence, it also closes the previous one. The
+  exception is the first header, which only opens. And while most
+  sequences are closed by a header, there is one exception to this rule,
+  too: The last sequence is closed by the end of the file.
+
+  \begin{figure}
+  \begin{verbatim}
+  >First sequence
+  data
+  >Second sequence
+  data
+  ...
+  >Last sequence
+  data
+  EndOfFile
+  \end{verbatim}
+  \caption{The structure of a FASTA file.}\label{fig:fas2}
+  \end{figure}
+
+  Given this structure, we mark the last sequence. We also store the
+  current and previous headers.
+#+end_src
+#+begin_src go <<Functions>>=
+  func (s *Scanner) ScanSequence() bool {
+	  if s.lastSequence {
+		  return false
+	  }
+	  for s.ScanLine() {
+		  //<<Scan a sequence>>
+	  }
+	  s.lastSequence = true
+	  s.previousHeader = s.currentHeader
+	  return true
+  }
+#+end_src
+#+begin_src latex
+  We declare the field \texttt{lastSequence}, and the fields for storing
+  the current and the previous headers.
+#+end_src
+#+begin_src go <<Scanner fields>>=
+  lastSequence bool
+  previousHeader, currentHeader string
+#+end_src
+#+begin_src latex
+  Any line scanned is either a header or data.
+#+end_src
+#+begin_src go <<Scan a sequence>>=
+  if s.IsHeader {
+	  //<<Deal with header>>
+  } else {
+	  //<<Deal with data>>
+  }
+#+end_src
+#+begin_src latex
+  When dealing with a header, we save it for later use. If it's not the
+  header of the first sequence, it marks the end of a sequence, which we
+  signal by returning \texttt{true}.
+#+end_src
+#+begin_src go <<Deal with header>>=
+  s.previousHeader = s.currentHeader
+  s.currentHeader = string(s.Line())
+  if s.firstSequence {
+	  s.firstSequence = false
+  } else {
+	  return true
+  }
+#+end_src
+#+begin_src latex
+  We declare the variable for marking the first sequence.
+#+end_src
+#+begin_src go <<Scanner fields>>=
+  firstSequence bool
+#+end_src
+#+begin_src latex
+  Lines of data get stored. 
+#+end_src
+#+begin_src go <<Deal with data>>=
+  s.data = append(s.data, s.Line()...)
+#+end_src
+#+begin_src latex
+  The \texttt{data} field is declared.
+#+end_src
+#+begin_src go <<Scanner fields>>=
+  data []byte
+#+end_src
+#+begin_src latex
+  A scanned sequence still needs to be retrieved.
+  \subsection{Method \texttt{Sequence}}
+  !\texttt{Sequence} returns the last \texttt{Sequence} scanned.
+  It also resets \texttt{data}.
+#+end_src
+#+begin_src go <<Methods>>=
+  func (s *Scanner) Sequence() *Sequence {
+	  seq := &Sequence {
+		  Header: s.previousHeader,
+	  }
+	  seq.Data = make([]byte, len(s.data))
+	  copy(seq.Data, s.data)
+	  seq.Ends = append(seq.Ends, len(seq.Data))
+	  s.data = s.data[:0]
+	  return seq
+  }
+#+end_src
+#+begin_src latex
+  \subsection{Function \texttt{NewScanner}}
+  !\texttt{NewScanner} returns a new \texttt{Scanner} to read from
+  !\texttt{r}.
+  The next header it encounters certainly belongs to the first, but not
+  necessarily to
+  the last, sequence in the data stream. Whether or not it does belong
+  to the last sequence is decided when the end of file is reached, we
+  we leave \texttt{lastSequence} in its default \texttt{false} state at
+  this point.
+#+end_src
+#+begin_src go <<Functions>>=
+  func NewScanner(r io.Reader) *Scanner {
+	  sc := bufio.NewScanner(r)
+	  scanner := Scanner{
+		  s: sc,
+		  firstSequence: true,
+	  }
+	  return &scanner
+  }
+#+end_src
+#+begin_src latex
+  We have used the \texttt{io} package.
+#+end_src
+#+begin_src go <<Imports>>=
+  "io"
+#+end_src
+
+
+
+
+#+begin_src latex
+  \section{Manipulate}
+  \begin{itemize}
+  \item Reverse-complement
+  \item Concatenate
+  \item Join
+  \end{itemize}
+#+end_src
+
