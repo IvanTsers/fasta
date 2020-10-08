@@ -55,11 +55,19 @@
 #+end_src
 #+begin_src latex
   \subsubsection{Method \texttt{String}}
-  We declare \texttt{TestString}.
+  We test \texttt{String} on a sequence of five nucleotides. This is
+  printed with line lengths 4, 5, 10, and $\infty$; in other words,
+  shorter than the sequence, as long as the sequence, longer than the
+  sequence, and ``infinitely'' long, which is denoted by any length less
+  than 1.
 #+end_src
 #+begin_src go <<Testing functions>>=
   func TestString(t *testing.T) {
-	  //<<Test \texttt{String}>>
+	  seq := NewSequence("seq", []byte("ACCGT"))
+	  ll := []int{4, 5, 10, 0}
+	  for _, l := range ll {
+		  //<<Test \texttt{String}>>
+	  }
   }
 #+end_src
 #+begin_src latex
@@ -76,10 +84,9 @@
   length and write it to a new temporary file.
 #+end_src
 #+begin_src go <<Write a \texttt{Sequence} to file>>=
-  s1 := NewSequence("s1", []byte("ACCGT"))
-  s1.LineLength = 4
+  seq.SetLineLength(l)
   f, _ := ioutil.TempFile("", "test_*")
-  fmt.Fprintf(f, "%s\n", s1)
+  fmt.Fprintf(f, "%s\n", seq)
   f.Close()
 #+end_src
 #+begin_src latex
@@ -115,12 +122,13 @@
   //<<Check formatting>>
 #+end_src
 #+begin_src latex
-  The headers are compared as strings.
+  The headers are compared.
 #+end_src
 #+begin_src go <<Check header>>=
-  if string(b2[0][1:]) != s1.Header {
+  h := string(b2[0][1:])
+  if h != seq.Header() {
 	  t.Errorf("did not write header correctly; want %q; get %q\n",
-		  string(b2[0][1:]), s1.Header)
+		  h, seq.Header())
   }
 #+end_src
 #+begin_src latex
@@ -133,7 +141,8 @@
 		  continue
 	  }
 	  for _, c := range s {
-		  if c != s1.Data[counter] {
+		  d := seq.Data()
+		  if c != d[counter] {
 			  t.Error("did not write data correctly")
 		  }
 		  counter++
@@ -141,13 +150,14 @@
   }
 #+end_src
 #+begin_src latex
-  The formatting is correct, if the first line of data is four
-  nucleotides long.
+  Compare the expected position of the newline with that observed.
 #+end_src
 #+begin_src go <<Check formatting>>=
-if len(b2[1]) != 4 {
-	t.Error("did not format data correctly")
-}
+  if l <= 5 && l > 0 {
+	  if len(b2[1]) != l {
+		  t.Errorf("did not format data correctly: want: %d; get: %d", l, len(b2[1]))
+	  }
+  }
 #+end_src
 #+begin_src latex
   \subsection{\texttt{Scanner}}
@@ -218,9 +228,10 @@ if len(b2[1]) != 4 {
   scanner := NewScanner(in)
   for scanner.ScanSequence() {
 	  seq := scanner.Sequence()
+	  e := seq.Ends()
 	  fmt.Fprintf(out, "%s\n", seq)
-	  if seq.Ends[0] != lengths[c] {
-		  t.Errorf("want Ends[0]: %d; get: %d\n", seq.Ends[0], lengths[c])
+	  if e[0] != lengths[c] {
+		  t.Errorf("want ends[0]: %d; get: %d\n", e[0], lengths[c])
 	  }
 	  c++
   }

@@ -4,22 +4,21 @@
   nucleotide and protein sequences. As an example, Figure~\ref{fig:fas}
   shows the first five lines of the genomes of two \emph{Escherichia
     coli} strains. \emph{E. coli} is a bacterium that lives in the guts
-  of warm-blooded animals, including our own. Each sequence depicted
-  consists of a header line starting with a \verb+>+. There are no
-  generally accepted rules as to what might follow that first character,
-  but our example headers contain the GenBank accession numbers,
-  AE005174.2 and AE014075.1, and the \emph{E. coli} strains, EDL933 and
-  CFT073. The header is followed by the actual sequence data in lines 70
-  residues long. Line length is a convention often flouted, some FASTA
-  files have lines shorter than 70, in others the data is in a single
-  line.
+  of warm-blooded animals, including our own. Each sequence consists of
+  a header line starting with a \verb+>+. There are no generally
+  accepted rules as to what might follow that first character, but each
+  example header contains a GenBank accession number, followed by the
+  organism, and the strain. The header is followed by the actual
+  sequence data in lines 70 residues long. A line length of 70 is a
+  convention often flouted, some FASTA files have lines shorter than 70,
+  in others the data is in a single line.
 
   This data can be very long. The genome of our first example strain
   EDL933 consists of 5,528,445 nucleotides in 78,978 lines. Similarly,
-  the genome of the second example strain has 5,231,428 nucleotides in
-  74,735 lines. Still, \emph{E. coli} genomes are tiny compared to our
-  three billion nucleotides. Efficiency is thus important when designing
-  a package for dealing with sequence data.
+  the genome of the second example strain, CFT073, has 5,231,428
+  nucleotides in 74,735 lines. Still, \emph{E. coli} genomes are tiny
+  compared to our three billion nucleotides. Efficiency is thus
+  important when designing a package for dealing with sequence data.
 
 
   \begin{figure}
@@ -64,32 +63,60 @@
   !The \texttt{Sequence} structure consists of a header and the actual
   !sequence data. This data describes $n$ molecules, which are accessed
   !\texttt{Data[0:Ends[0]]}, etc.
-  A sequence is printed with data lines of length \texttt{LineLength} or
+  A sequence is printed with data lines of length \texttt{lineLength} or
   less.
-
 #+end_src
 #+begin_src go <<Data structures>>=
   type Sequence struct {
-	  Header string
-	  Data []byte
-	  Ends []int
-	  LineLength int
+	  header string
+	  data []byte
+	  ends []int
+	  lineLength int
   }
+#+end_src
+#+begin_src latex
+  These four fields come with getters.
+#+end_src
+#+begin_src go <<Methods>>=
+  func (s *Sequence) Header() string { return s.header }
+  func (s *Sequence) Data() []byte   { return s.data }
+  func (s *Sequence) Ends() []int    { return s.ends }
+  func (s *Sequence) LineLength() int { return s.lineLength }
+#+end_src
+#+begin_src latex
+  For \texttt{lineLength} there is also a setter.
+  !If the line length
+  !passed is less than 1, it is assumed that effectively infinite lines
+  !are requested.
+#+end_src
+#+begin_src go <<Methods>>=
+  func (s *Sequence) SetLineLength(l int) {
+	  s.lineLength = l
+	  if s.lineLength < 1 {
+		  s.lineLength = math.MaxInt64
+	  }
+  }
+#+end_src
+#+begin_src latex
+  We import \texttt{math}.
+#+end_src
+#+begin_src go <<Imports>>=
+  "math"
 #+end_src
 #+begin_src latex
   \subsection{Function \texttt{NewSequence}}
   !Function NewSequence returns a new Sequence.
   It takes as argument a header and sequence data, and sets the
-  appropriate value in \texttt{Ends}. It also initializes
-  \texttt{LineLength} to its default value.
+  appropriate value in \texttt{ends}. It also initializes
+  \texttt{lineLength} to its default value.
 #+end_src
 #+begin_src go <<Functions>>=
   func NewSequence(h string, d []byte) *Sequence {
 	  s := new(Sequence)
-	  s.Header = h
-	  s.Data = append(s.Data, d...)
-	  s.Ends = append(s.Ends, len(d))
-	  s.LineLength = DefaultLineLength
+	  s.header = h
+	  s.data = append(s.data, d...)
+	  s.ends = append(s.ends, len(d))
+	  s.lineLength = DefaultLineLength
 	  return s
   }
 #+end_src
@@ -102,37 +129,37 @@ DefaultLineLength = 70
 #+end_src
 #+begin_src latex
   \subsection{Method \texttt{Equals}}
-  !\texttt{Equals} compares two sequences and returns true if their Headers, Data,
-  !and Ends are identical.
-  The field \texttt{LineLength} is not compared, as this is not an
+  !\texttt{Equals} compares two sequences and returns true if their headers, data,
+  !and ends are identical.
+  The field \texttt{lineLength} is not compared, as this is not an
   essential aspect of the \texttt{Sequence}.
 #+end_src
 #+begin_src go <<Methods>>=
   func (a *Sequence) Equals(b *Sequence) bool {
-	  //<<Test \texttt{Header}>>
-	  //<<Test \texttt{Data}>>
-	  //<<Test \texttt{Ends}>>
+	  //<<Test \texttt{header}>>
+	  //<<Test \texttt{data}>>
+	  //<<Test \texttt{ends}>>
 	  return true
   }
 #+end_src
 #+begin_src latex
   Strings are comparable.
 #+end_src
-#+begin_src go <<Test \texttt{Header}>>=
-  if a.Header != b.Header {
+#+begin_src go <<Test \texttt{header}>>=
+  if a.header != b.header {
 	  return false
   }
 #+end_src
 #+begin_src latex
-  \texttt{Data} is a byte slice, which can only be compared
+  \texttt{data} is a byte slice, which can only be compared
   byte-wise. But before we go to that trouble, we check that the slices
   are the same length.
 #+end_src
-#+begin_src go <<Test \texttt{Data}>>=
-  if len(a.Data) != len(b.Data) {
+#+begin_src go <<Test \texttt{data}>>=
+  if len(a.data) != len(b.data) {
 	  return false
   }
-  return bytes.Equal(a.Data, b.Data)
+  return bytes.Equal(a.data, b.data)
 #+end_src
 #+begin_src latex
   We import \texttt{bytes}.
@@ -141,14 +168,14 @@ DefaultLineLength = 70
   "bytes"
 #+end_src
 #+begin_src latex
-  Similarly, we compare \texttt{Ends} element-wise.
+  Similarly, we compare \texttt{ends} element-wise.
 #+end_src
-#+begin_src go <<Test \texttt{Ends}>>=
-  if len(a.Ends) != len(b.Ends) {
+#+begin_src go <<Test \texttt{ends}>>=
+  if len(a.ends) != len(b.ends) {
 	  return false
   }
-  for i, v := range a.Ends {
-	  if v != b.Ends[i] {
+  for i, v := range a.ends {
+	  if v != b.ends[i] {
 		  return false
 	  }
   }
@@ -156,7 +183,7 @@ DefaultLineLength = 70
 #+begin_src latex
   \subsection{Method \texttt{String}}
   Writing a \texttt{Sequence} is delegated the to its \texttt{String} method.
-  !\texttt{String} wraps the sequence into lines at most \texttt{LineLength} characters long.
+  !\texttt{String} wraps the sequence into lines at most \texttt{lineLength} characters long.
   We construct the final string from an intermediate byte slice, into
   which we copy the header and the data. The data is
   interspersed with newlines. If this results in a terminal
@@ -175,9 +202,9 @@ DefaultLineLength = 70
   If present, the header is stored and terminated by a newline.
 #+end_src
 #+begin_src go <<Store header>>=
-  if len(s.Header) > 0 {
+  if len(s.header) > 0 {
 	  b = append(b, '>')
-	  b = append(b, s.Header...)
+	  b = append(b, s.header...)
 	  b = append(b, '\n')
   }
 #+end_src
@@ -186,18 +213,17 @@ DefaultLineLength = 70
 #+end_src
 #+begin_src go <<Store data>>=
   var c int
-  for _, r := range s.Data {
+  for _, r := range s.data {
 	  b = append(b, r)
 	  c++
-	  if c == s.LineLength {
+	  if c == s.lineLength {
 		  c = 0
 		  b = append(b, '\n')
 	  }
   }
 #+end_src
 #+begin_src latex
-  If we have just added a terminal newline, this gets removed again. But
-  only, if anything was added to the buffer in the first place.
+  If we have just added a terminal newline, this gets removed again.
 #+end_src
 #+begin_src go <<Remove terminal newline>>=
   if c == 0  && len(b) > 0 {
@@ -205,9 +231,8 @@ DefaultLineLength = 70
   }
 #+end_src
 #+begin_src latex
-  When returning the final string, we need to make sure the buffer,
-  \texttt{b}, actually contains some data. If not, we return the empty
-  string.
+  When returning the final string, we make sure the buffer, \texttt{b},
+  actually contains some data. If not, we return the empty string.
 #+end_src
 #+begin_src go <<Return string>>=
   if len(b) > 0 {
@@ -240,7 +265,8 @@ DefaultLineLength = 70
 #+end_src
 #+begin_src latex
   When parsing a FASTA file, we either read it line by line or sequence
-  by sequence. We first deal with lines, then sequences.
+  by sequence. We first deal with lines, then use the result to deal
+  with sequences.
   \subsection{Method \texttt{ScanLine}}
   !\texttt{ScanLine} reads input line by line. It skips
   !empty lines and marks headers.
@@ -294,9 +320,11 @@ DefaultLineLength = 70
   starts the next sequence, it also closes the previous one. The
   exception is the first header, which only opens. And while most
   sequences are closed by a header, there is one exception to this rule,
-  too: The last sequence is closed by the end of the file.
+  too: The last sequence is closed by the end of file.
 
   \begin{figure}
+    \begin{center}
+      \begin{minipage}{3cm}
   \begin{verbatim}
   >First sequence
   data
@@ -307,7 +335,9 @@ DefaultLineLength = 70
   data
   EndOfFile
   \end{verbatim}
-  \caption{The structure of a FASTA file.}\label{fig:fas2}
+      \end{minipage}
+    \end{center}
+    \caption{The structure of a FASTA file.}\label{fig:fas2}
   \end{figure}
 
   Given this structure, we mark the last sequence. We also store the
@@ -385,11 +415,11 @@ DefaultLineLength = 70
 #+begin_src go <<Methods>>=
   func (s *Scanner) Sequence() *Sequence {
 	  seq := &Sequence {
-		  Header: s.previousHeader,
+		  header: s.previousHeader,
 	  }
-	  seq.Data = make([]byte, len(s.data))
-	  copy(seq.Data, s.data)
-	  seq.Ends = append(seq.Ends, len(seq.Data))
+	  seq.data = make([]byte, len(s.data))
+	  copy(seq.data, s.data)
+	  seq.ends = append(seq.ends, len(seq.data))
 	  s.data = s.data[:0]
 	  return seq
   }
@@ -398,11 +428,10 @@ DefaultLineLength = 70
   \subsection{Function \texttt{NewScanner}}
   !\texttt{NewScanner} returns a new \texttt{Scanner} to read from
   !\texttt{r}.
-  The next header it encounters certainly belongs to the first, but not
-  necessarily to
-  the last, sequence in the data stream. Whether or not it does belong
-  to the last sequence is decided when the end of file is reached, we
-  we leave \texttt{lastSequence} in its default \texttt{false} state at
+  The next header it encounters certainly belongs to the first sequence
+  in the data stream, which may also be the last, but not
+  necessarily. This is decided at the end of the file. We therefore
+  leave \texttt{lastSequence} in its default \texttt{false} state at 
   this point.
 #+end_src
 #+begin_src go <<Functions>>=
