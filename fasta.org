@@ -6,12 +6,12 @@
     coli} strains. \emph{E. coli} is a bacterium that lives in the guts
   of warm-blooded animals, including our own. Each sequence consists of
   a header line starting with a \verb+>+. There are no generally
-  accepted rules as to what might follow that first character, but each
-  example header contains a GenBank accession number, followed by the
-  organism, and the strain. The header is followed by the actual
-  sequence data in lines 70 residues long. A line length of 70 is a
-  convention often flouted, some FASTA files have lines shorter than 70,
-  in others the data is in a single line.
+  accepted rules as to what might follow, but each of our example
+  headers contains a GenBank accession number, followed by the organism,
+  and the strain. The header is followed by the actual sequence data in
+  lines 70 residues long. A line length of 70 is a convention often
+  flouted, some FASTA files have shorter lines, others all data of an
+  entry in a single line.
 
   This data can be very long. The genome of our first example strain
   EDL933 consists of 5,528,445 nucleotides in 78,978 lines. Similarly,
@@ -61,8 +61,7 @@
   storing a sequence, and \texttt{Scanner} for parsing data.
   \section{Structure \texttt{Sequence}}
   !The \texttt{Sequence} structure consists of a header and the actual
-  !sequence data. This data describes $n$ molecules, which are accessed
-  !\texttt{Data[0:Ends[0]]}, etc.
+  !sequence data. 
   A sequence is printed with data lines of length \texttt{lineLength} or
   less.
 #+end_src
@@ -70,7 +69,6 @@
   type Sequence struct {
 	  header string
 	  data []byte
-	  ends []int
 	  lineLength int
   }
 #+end_src
@@ -80,7 +78,6 @@
 #+begin_src go <<Methods>>=
   func (s *Sequence) Header() string { return s.header }
   func (s *Sequence) Data() []byte   { return s.data }
-  func (s *Sequence) Ends() []int    { return s.ends }
   func (s *Sequence) LineLength() int { return s.lineLength }
 #+end_src
 #+begin_src latex
@@ -106,8 +103,7 @@
 #+begin_src latex
   \subsection{Function \texttt{NewSequence}}
   !Function NewSequence returns a new Sequence.
-  It takes as argument a header and sequence data, and sets the
-  appropriate value in \texttt{ends}. It also initializes
+  It takes as argument a header and sequence data. It also initializes
   \texttt{lineLength} to its default value.
 #+end_src
 #+begin_src go <<Functions>>=
@@ -115,7 +111,6 @@
 	  s := new(Sequence)
 	  s.header = h
 	  s.data = append(s.data, d...)
-	  s.ends = append(s.ends, len(d))
 	  s.lineLength = DefaultLineLength
 	  return s
   }
@@ -129,8 +124,8 @@ DefaultLineLength = 70
 #+end_src
 #+begin_src latex
   \subsection{Method \texttt{Equals}}
-  !\texttt{Equals} compares two sequences and returns true if their headers, data,
-  !and ends are identical.
+  !\texttt{Equals} compares two sequences and returns true if their
+  !headers and data are identical.
   The field \texttt{lineLength} is not compared, as this is not an
   essential aspect of the \texttt{Sequence}.
 #+end_src
@@ -138,7 +133,6 @@ DefaultLineLength = 70
   func (a *Sequence) Equals(b *Sequence) bool {
 	  //<<Test \texttt{header}>>
 	  //<<Test \texttt{data}>>
-	  //<<Test \texttt{ends}>>
 	  return true
   }
 #+end_src
@@ -168,26 +162,13 @@ DefaultLineLength = 70
   "bytes"
 #+end_src
 #+begin_src latex
-  Similarly, we compare \texttt{ends} element-wise.
-#+end_src
-#+begin_src go <<Test \texttt{ends}>>=
-  if len(a.ends) != len(b.ends) {
-	  return false
-  }
-  for i, v := range a.ends {
-	  if v != b.ends[i] {
-		  return false
-	  }
-  }
-#+end_src
-#+begin_src latex
   \subsection{Method \texttt{String}}
   Writing a \texttt{Sequence} is delegated the to its \texttt{String} method.
   !\texttt{String} wraps the sequence into lines at most \texttt{lineLength} characters long.
   We construct the final string from an intermediate byte slice, into
   which we copy the header and the data. The data is
   interspersed with newlines. If this results in a terminal
-  newline, it's removed. Finally, return the new string.
+  newline, it's removed. Finally, we return the new string.
 #+end_src
 #+begin_src go <<Methods>>=
   func (s *Sequence) String() string {
@@ -245,8 +226,7 @@ DefaultLineLength = 70
   \section{Structure \texttt{Scanner}}
   !A \texttt{Sequence} is read using a \texttt{Scanner}.
   It wraps a
-  \texttt{bufio.Scanner} and we aim to make our scanner behave like
-  the example set by the library. So we declare
+  \texttt{bufio.Scanner} and we aim to make our scanner behave similarly. So we declare
   a \texttt{bufio.Scanner} 
   and add a hook for any additional
   fields we might need later on.
@@ -287,30 +267,40 @@ DefaultLineLength = 70
 #+begin_src go <<Found header?>>=
   if len(b) > 0 {
 	  if b[0] == '>' {
-		  s.IsHeader = true
+		  s.isHeader = true
 	  } else {
-		  s.IsHeader = false
+		  s.isHeader = false
 	  }
 	  return true
   }
 #+end_src
 #+begin_src latex
-  We have used the scanner field \texttt{IsHeader}.
+  We have used the scanner field \texttt{isHeader}
 #+end_src
 #+begin_src go <<Scanner fields>>=
-  IsHeader bool
+  isHeader bool
 #+end_src
 #+begin_src latex
-  So far, we have only \emph{parsed} a line; we still need a method to
-  \emph{retrieve} it.
-  \subsection{Method \texttt{Line}}
-  !\texttt{Line} returns the last non-empty line scanned.
+  and write its getter.
+#+end_src
+#+begin_src go <<Methods>>=
+  func (s *Scanner) IsHeader() bool {
+	  return s.isHeader
+  }
+#+end_src
+#+begin_src latex
+So far, we have only \emph{parsed} a line; we still need a method to
+\emph{retrieve} it.
+\subsection{Method \texttt{Line}}
+!\texttt{Line} returns the last non-empty line scanned.
 #+end_src
 #+begin_src go <<Methods>>=
   func (s *Scanner) Line() []byte {
 	  return s.s.Bytes()
   }
 #+end_src
+
+
 #+begin_src latex
   \subsection{Method \texttt{ScanSequence}}
   ! \texttt{ScanSequence} reads input \texttt{Sequence} by \texttt{Sequence}.
@@ -318,7 +308,7 @@ DefaultLineLength = 70
   sketched in Figure~\ref{fig:fas2}, each entry in a FASTA file begins
   with a header. With one exception, each of these headers not only
   starts the next sequence, it also closes the previous one. The
-  exception is the first header, which only opens. And while most
+  exception is the first header, which only opens a sequence. And while most
   sequences are closed by a header, there is one exception to this rule,
   too: The last sequence is closed by the end of file.
 
@@ -368,7 +358,7 @@ DefaultLineLength = 70
   Any line scanned is either a header or data.
 #+end_src
 #+begin_src go <<Scan a sequence>>=
-  if s.IsHeader {
+  if s.isHeader {
 	  //<<Deal with header>>
   } else {
 	  //<<Deal with data>>
@@ -419,7 +409,6 @@ DefaultLineLength = 70
 	  }
 	  seq.data = make([]byte, len(s.data))
 	  copy(seq.data, s.data)
-	  seq.ends = append(seq.ends, len(seq.data))
 	  s.data = s.data[:0]
 	  return seq
   }
@@ -450,16 +439,3 @@ DefaultLineLength = 70
 #+begin_src go <<Imports>>=
   "io"
 #+end_src
-
-
-
-
-#+begin_src latex
-  \section{Manipulate}
-  \begin{itemize}
-  \item Reverse-complement
-  \item Concatenate
-  \item Join
-  \end{itemize}
-#+end_src
-

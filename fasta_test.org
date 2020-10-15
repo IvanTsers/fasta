@@ -1,7 +1,7 @@
 #+begin_src latex
   \section{Testing}
-  We import the \texttt{testing} package and add a hook for further
-  imports and for functions.
+  We import the \texttt{testing} package and add hooks for further
+  imports and functions.
 #+end_src
 #+begin_src go <<fasta_test.go>>=
   package fasta
@@ -183,25 +183,12 @@
 #+end_src
 #+begin_src go <<Testing functions>>=
   func TestScanner(t *testing.T) {
-	  //<<Store sequence lengths>>
-	  var c int
 	  for i := 1; i <= 1; i++ {
 		  //<<Open files>>
 		  //<<Read and write files>>
 		  //<<Compare files>>
 	  }
   }
-#+end_src
-#+begin_src latex
-  The sequence lengths are entered ``manually''. 
-#+end_src
-#+begin_src go <<Store sequence lengths>>=
-  lengths := []int{
-	  0, 0, 0,
-	  5, 70, 70,
-	  140, 140,
-	  700, 700, 700, 700, 700,
-	  1000, 1000, 1000, 1000, 1000}
 #+end_src
 #+begin_src latex
   Open the input and output files.
@@ -222,18 +209,13 @@
 #+end_src
 #+begin_src latex
   Sequences are read via a \texttt{Scanner} and written by implicit
-  calls to \texttt{Sequence}.
+  calls to the \texttt{String} method of \texttt{Sequence}.
 #+end_src
 #+begin_src go <<Read and write files>>=
   scanner := NewScanner(in)
   for scanner.ScanSequence() {
 	  seq := scanner.Sequence()
-	  e := seq.Ends()
 	  fmt.Fprintf(out, "%s\n", seq)
-	  if e[0] != lengths[c] {
-		  t.Errorf("want ends[0]: %d; get: %d\n", e[0], lengths[c])
-	  }
-	  c++
   }
   in.Close()
   out.Close()
