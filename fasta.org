@@ -73,7 +73,8 @@
   }
 #+end_src
 #+begin_src latex
-  These four fields come with getters.
+  \subsection{Getters and Setters}
+  The three fields of \texttt{Sequence} come with getters.
 #+end_src
 #+begin_src go <<Methods>>=
   func (s *Sequence) Header() string { return s.header }
