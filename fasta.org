@@ -366,9 +366,10 @@ So far, we have only \emph{parsed} a line; we still need a method to
   }
 #+end_src
 #+begin_src latex
-  When dealing with a header, we save it for later use. If it's not the
-  header of the first sequence, it marks the end of a sequence, which we
-  signal by returning \texttt{true}.
+  When dealing with a header, we save it for later use without the
+  leading \texttt{>}. If it's not the header of the first sequence, it
+  marks the end of a sequence, which we signal by returning
+  \texttt{true}.
 #+end_src
 #+begin_src go <<Deal with header>>=
   s.previousHeader = s.currentHeader
