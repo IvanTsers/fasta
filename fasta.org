@@ -372,7 +372,7 @@ So far, we have only \emph{parsed} a line; we still need a method to
 #+end_src
 #+begin_src go <<Deal with header>>=
   s.previousHeader = s.currentHeader
-  s.currentHeader = string(s.Line())
+  s.currentHeader = string(s.Line()[1:])
   if s.firstSequence {
 	  s.firstSequence = false
   } else {
