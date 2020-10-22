@@ -161,57 +161,64 @@
 #+end_src
 #+begin_src latex
   \subsubsection{Method \texttt{Shuffle}}
-  We get the original sequence contained in \texttt{seq4.fasta} and its
-  shuffled version contained in \texttt{seq4shuffled.fasta}. Then we
-  shuffle the original and compare the result we get to that we want.
+  We generate a sequence and its shuffled version when seeding
+  the random number generator with 13. Then we shuffle the original and
+  compare what we get to what we want.
 #+end_src
 #+begin_src go <<Testing functions>>=
   func TestShuffle(t *testing.T) {
-	  //<<Get original sequence>>
-	  //<<Get shuffled sequence>>
-	  //<<Shuffle original>>
-	  //<<Compare shuffled and original>>
+    orig := NewSequence("", []byte("ACCGT"))
+    shuf := []byte("GTACC")
+    r := rand.New(rand.NewSource(13))
+    orig.Shuffle(r)
+    if !bytes.Equal(orig.data, shuf) {
+	    t.Errorf("want:\n%s\nget:\n%s\n",
+		    string(shuf),
+		    string(orig.data))
+    }
   }
-#+end_src
-#+begin_src go <<Get original sequence>>=
-  fn := "data/seq4.fasta"
-  f, err := os.Open(fn)
-  if err != nil {
-	  t.Errorf("can't open %q\n", fn)
-  }
-  sc := NewScanner(f)
-  sc.ScanSequence()
-  orig := sc.Sequence()
-  f.Close()
-#+end_src
-#+begin_src go <<Get shuffled sequence>>=
-  fn = "data/seq4shuffled.fasta"
-  f, err = os.Open(fn)
-  if err != nil {
-	  t.Errorf("can't open %q\n", fn)
-  }
-  sc = NewScanner(f)
-  sc.ScanSequence()
-  shuffled := sc.Sequence()
-  f.Close()
-#+end_src
-#+begin_src go <<Shuffle original>>=
-  r := rand.New(rand.NewSource(13))
-  orig.Shuffle(r)
 #+end_src
 #+begin_src latex
-  We import the \tesxttt{math/rand} package.
+  We import \texttt{math/rand}.
 #+end_src
 #+begin_src go <<Testing imports>>=
   "math/rand"
 #+end_src
-#+begin_src go <<Compare shuffled and original>>=
-  if !bytes.Equal(orig.data, shuffled.data) {
-	  t.Errorf("want:\n%s\nget:\n%s\n",
-		  string(shuffled.data),
-		  string(orig.data))
+#+begin_src latex
+  \subsubsection{Method \texttt{Reverse}}
+  We start with a \texttt{Sequence} and its reverse. Then we reverse the
+  original and check whether we get what we want.
+#+end_src
+#+begin_src go <<Testing functions>>=
+  func TestReverse(t *testing.T) {
+    ori := NewSequence("", []byte("ACCGT"))
+    rev := []byte("TGCCA")
+    ori.Reverse()
+    if !bytes.Equal(ori.data, rev) {
+	    t.Errorf("want:\n%s\nget:\n%s\n",
+		    string(rev),
+		    string(ori.data))
+    }
   }
 #+end_src
+#+begin_src latex
+  \subsubsection{Method \texttt{ReverseComplement}}
+  We generate a short \texttt{Sequence} and its reverse complement. Then
+  we reverse-complement the original and compare what we want to what we get.
+#+end_src
+#+begin_src go <<Testing functions>>=
+  func TestReverseComplement(t *testing.T) {
+    ori := NewSequence("", []byte("ACCGT"))
+    rc  := []byte("ACGGT")
+    ori.ReverseComplement()
+    if !bytes.Equal(ori.data, rc) {
+	    t.Errorf("want:\n%s\nget:\n%s\n",
+		    string(rc),
+		    string(ori.data))
+    }
+  }
+#+end_src
+
 #+begin_src latex
   \subsection{\texttt{Scanner}}
   The \texttt{Scanner} is tested by reading and writing a set of files,

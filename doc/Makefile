@@ -1,6 +1,8 @@
 NAME = fasta
 all: $(NAME)Doc.pdf
 	latex $(NAME)Doc
+	bibtex $(NAME)Doc
+	latex $(NAME)Doc
 	latex $(NAME)Doc
 	latex $(NAME)Doc
 	dvipdf $(NAME)Doc

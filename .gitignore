@@ -4,5 +4,7 @@ doc/*.dvi
 doc/*.log
 doc/*.pdf
 doc/*.toc
+doc/*.bbl
+doc/*.blg
 doc/fasta_test.tex
 doc/fasta.tex

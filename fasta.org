@@ -224,7 +224,7 @@ DefaultLineLength = 70
   }
 #+end_src
 #+begin_src latex 
-  \subsection{Method \texttt{Shuffle}}
+  \subsection{Method \texttt{Shuffle}}\label{sec:rev}
   !Method \texttt{Shuffle} randomizes the residues in a
   !\texttt{Sequence}. The sequence composition remains unchanged.
   We implement this using the \texttt{Shuffle} method of
@@ -243,6 +243,91 @@ DefaultLineLength = 70
 #+end_src
 #+begin_src go <<Imports>>=
   "math/rand"
+#+end_src
+#+begin_src latex
+  \subsection{Method \texttt{Reverse}}
+  !Method \texttt{Reverse} reverses the residues of a
+  !\texttt{Sequence}.
+  We implement it using the code shown in \cite[p. 86]{don16:go}.
+#+end_src
+#+begin_src go <<Methods>>=
+  func (s *Sequence) Reverse() {
+	  d := s.data
+	  for i, j := 0, len(d)-1; i < j; i, j = i+1, j-1 {
+		  d[i], d[j] = d[j], d[i]
+	  }
+  }
+#+end_src
+#+begin_src latex
+  \subsection{Method \texttt{ReverseComplement}}
+  A routine operation on nucleotide sequences is to compute their
+  reverse complement. Reversal is dealt with in
+  Section~\ref{sec:rev}. Complementation means, we turn the canonical
+  nucleotides \texttt{ACGTU} into \texttt{TGCAU}. In addition, we
+  consider the ambiguous nucleotides listed in Table~\ref{tab:amb}.
+  \begin{table}[ht]
+    \caption{Ambiguity codes for nucleotides}\label{tab:amb}
+    \begin{center}
+      \begin{tabular}{cl}
+	\hline
+	Symbol & Meaning\\\hline
+	\texttt{B} & \texttt{[\^{ }A]}\\
+	\texttt{D} & \texttt{[\^{ }C]}\\
+	\texttt{H} & \texttt{[\^{ }G]}\\
+	\texttt{K} & \texttt{[GTU]}\\
+	\texttt{M} & \texttt{[AC]}\\
+	\texttt{N} & \texttt{[ACGTU]}\\
+	\texttt{R} & \texttt{[AG]}\\
+	\texttt{S} & \texttt{[CG]}\\
+	\texttt{V} & \texttt{[\^{ }TU]}\\
+	\texttt{W} & \texttt{[ATU]}\\
+	\texttt{Y} & \texttt{[CTU]}\\\hline
+      \end{tabular}
+    \end{center}
+  \end{table}
+  This means a nucleotide sequence may contain the following characters,
+  \begin{center}
+    \texttt{ACGTUWSMKRYBDHVN},
+  \end{center}
+  which are complemented as
+  \begin{center}
+    \texttt{TGCAAWSKMYRVHDBN}.
+  \end{center}
+  Nucleotides may be denoted in caps or lower case
+  characters.
+
+  We begin our implementation by constructing a
+  nucleotide dictionary, which we then apply in the complementation.
+#+end_src
+#+begin_src go <<Methods>>=
+  func (s *Sequence) ReverseComplement() {
+	  f := []byte("ACGTUWSMKRYBDHVNacgtuwsmkrybdhvn")
+	  r := []byte("TGCAAWSKMYRVHDBNtgcaawskmyrvhdbn")
+	  //<<Construct dictionary>>
+	  //<<Construct reverse complement>>
+  }
+#+end_src
+#+begin_src latex
+  The dictionary consists of all $2^8=256$ bytes. Only nucleotides are
+  changed.
+#+end_src
+#+begin_src go <<Construct dictionary>>=
+  var dic [256]byte
+  for i, _ := range dic {
+	  dic[i] = byte(i)
+  }
+  for i, v := range f {
+	  dic[v] = r[i]
+  }
+#+end_src
+#+begin_src latex
+  Now we reverse the sequence and use the dictionary to complement it.
+#+end_src
+#+begin_src go <<Construct reverse complement>>=
+  s.Reverse()
+  for i, v := range s.data {
+	  s.data[i] = dic[v]
+  }
 #+end_src
 #+begin_src latex
   \section{Structure \texttt{Scanner}}
