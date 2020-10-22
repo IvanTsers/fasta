@@ -223,6 +223,27 @@ DefaultLineLength = 70
 	  return ""
   }
 #+end_src
+#+begin_src latex 
+  \subsection{Method \texttt{Shuffle}}
+  !Method \texttt{Shuffle} randomizes the residues in a
+  !\texttt{Sequence}. The sequence composition remains unchanged.
+  We implement this using the \texttt{Shuffle} method of
+  \texttt{math/rand}, as shown in the golang documentation.
+#+end_src
+#+begin_src go <<Methods>>=
+  func (s *Sequence) Shuffle(r *rand.Rand) {
+	  d := s.data
+	  r.Shuffle(len(d), func(i, j int) {
+		  d[i], d[j] = d[j], d[i]
+	  })
+  }
+#+end_src
+#+begin_src latex
+  We import \texttt{math/rand}.
+#+end_src
+#+begin_src go <<Imports>>=
+  "math/rand"
+#+end_src
 #+begin_src latex
   \section{Structure \texttt{Scanner}}
   !A \texttt{Sequence} is read using a \texttt{Scanner}.

@@ -160,6 +160,59 @@
   }
 #+end_src
 #+begin_src latex
+  \subsubsection{Method \texttt{Shuffle}}
+  We get the original sequence contained in \texttt{seq4.fasta} and its
+  shuffled version contained in \texttt{seq4shuffled.fasta}. Then we
+  shuffle the original and compare the result we get to that we want.
+#+end_src
+#+begin_src go <<Testing functions>>=
+  func TestShuffle(t *testing.T) {
+	  //<<Get original sequence>>
+	  //<<Get shuffled sequence>>
+	  //<<Shuffle original>>
+	  //<<Compare shuffled and original>>
+  }
+#+end_src
+#+begin_src go <<Get original sequence>>=
+  fn := "data/seq4.fasta"
+  f, err := os.Open(fn)
+  if err != nil {
+	  t.Errorf("can't open %q\n", fn)
+  }
+  sc := NewScanner(f)
+  sc.ScanSequence()
+  orig := sc.Sequence()
+  f.Close()
+#+end_src
+#+begin_src go <<Get shuffled sequence>>=
+  fn = "data/seq4shuffled.fasta"
+  f, err = os.Open(fn)
+  if err != nil {
+	  t.Errorf("can't open %q\n", fn)
+  }
+  sc = NewScanner(f)
+  sc.ScanSequence()
+  shuffled := sc.Sequence()
+  f.Close()
+#+end_src
+#+begin_src go <<Shuffle original>>=
+  r := rand.New(rand.NewSource(13))
+  orig.Shuffle(r)
+#+end_src
+#+begin_src latex
+  We import the \tesxttt{math/rand} package.
+#+end_src
+#+begin_src go <<Testing imports>>=
+  "math/rand"
+#+end_src
+#+begin_src go <<Compare shuffled and original>>=
+  if !bytes.Equal(orig.data, shuffled.data) {
+	  t.Errorf("want:\n%s\nget:\n%s\n",
+		  string(shuffled.data),
+		  string(orig.data))
+  }
+#+end_src
+#+begin_src latex
   \subsection{\texttt{Scanner}}
   The \texttt{Scanner} is tested by reading and writing a set of files,
   which cover the following cases:
