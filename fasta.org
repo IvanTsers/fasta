@@ -111,8 +111,10 @@
 #+begin_src latex
   \subsection{Function \texttt{NewSequence}}
   !Function NewSequence returns a new Sequence.
-  It takes as argument a header and sequence data. It also initializes
-  \texttt{lineLength} to its default value.
+  It takes as argument a
+  header and sequence data. The sequence data is copied using the
+  built-in function \texttt{copy} to make it as fast as possible. \texttt{NewSequence}
+  also initializes \texttt{lineLength} to its default value.
 #+end_src
 #+begin_src go <<Functions>>=
   func NewSequence(h string, d []byte) *Sequence {
