@@ -191,14 +191,13 @@ DefaultLineLength = 70
   }
 #+end_src
 #+begin_src latex
-  If present, the header is stored and terminated by a newline.
+  If present, the header is stored and terminated by a newline. The
+  header might be empty.
 #+end_src
 #+begin_src go <<Store header>>=
-  if len(s.header) > 0 {
-	  b = append(b, '>')
-	  b = append(b, s.header...)
-	  b = append(b, '\n')
-  }
+  b = append(b, '>')
+  b = append(b, s.header...)
+  b = append(b, '\n')
 #+end_src
 #+begin_src latex
   The data is copied byte-wise and decorated with newlines.
@@ -455,6 +454,9 @@ So far, we have only \emph{parsed} a line; we still need a method to
 
   Given this structure, we mark the last sequence. We also store the
   current and previous headers.
+
+  Unfortunately, we might not be dealing with a FASTA file in the first
+  place. We decide this right at the end of the scan.
 #+end_src
 #+begin_src go <<Functions>>=
   func (s *Scanner) ScanSequence() bool {
@@ -466,7 +468,7 @@ So far, we have only \emph{parsed} a line; we still need a method to
 	  }
 	  s.lastSequence = true
 	  s.previousHeader = s.currentHeader
-	  return true
+	  //<<Dealing with FASTA file?>>
   }
 #+end_src
 #+begin_src latex
@@ -521,10 +523,21 @@ So far, we have only \emph{parsed} a line; we still need a method to
   data []byte
 #+end_src
 #+begin_src latex
+  We still need to decide whether we've been dealing with a FASTA file,
+  after all. Yes, if we encountered at least one header.
+#+end_src
+#+begin_src go <<Dealing with FASTA file?>>=
+  if !s.firstSequence {
+	  return true
+  } else {
+	  return false
+  }
+#+end_src
+#+begin_src latex
   A scanned sequence still needs to be retrieved.
   \subsection{Method \texttt{Sequence}}
   !\texttt{Sequence} returns the last \texttt{Sequence} scanned.
-  It also resets \texttt{data}.
+  It also sets the line length and resets \texttt{data}.
 #+end_src
 #+begin_src go <<Methods>>=
   func (s *Scanner) Sequence() *Sequence {
@@ -533,6 +546,7 @@ So far, we have only \emph{parsed} a line; we still need a method to
 	  }
 	  seq.data = make([]byte, len(s.data))
 	  copy(seq.data, s.data)
+	  seq.lineLength = DefaultLineLength
 	  s.data = s.data[:0]
 	  return seq
   }

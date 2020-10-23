@@ -127,8 +127,8 @@
 #+begin_src go <<Check header>>=
   h := string(b2[0][1:])
   if h != seq.Header() {
-	  t.Errorf("did not write header correctly; want %q; get %q\n",
-		  h, seq.Header())
+	  t.Errorf("did not write header correctly; " +
+		  "want %q; get %q\n", h, seq.Header())
   }
 #+end_src
 #+begin_src latex
@@ -153,11 +153,12 @@
   Compare the expected position of the newline with that observed.
 #+end_src
 #+begin_src go <<Check formatting>>=
-  if l <= 5 && l > 0 {
-	  if len(b2[1]) != l {
-		  t.Errorf("did not format data correctly: want: %d; get: %d", l, len(b2[1]))
-	  }
-  }
+    if l <= 5 && l > 0 {
+	    if len(b2[1]) != l {
+		    t.Errorf("did not format data correctly: " +
+				  "want: %d; get: %d", l, len(b2[1]))
+	    }
+    }
 #+end_src
 #+begin_src latex
   \subsubsection{Method \texttt{Shuffle}}
@@ -221,13 +222,13 @@
 
 #+begin_src latex
   \subsection{\texttt{Scanner}}
-  The \texttt{Scanner} is tested by reading and writing a set of files,
+  The \texttt{Scanner} is tested by reading and writing eight of files,
   which cover the following cases:
   \begin{center}
     \begin{tabular}{ll}
       \hline
       Name & Content\\\hline
-      \texttt{seq1.fasta} & empty\\
+      \texttt{seq1.fasta} & empty file\\
       \texttt{seq2.fasta} & empty header, no data\\
       \texttt{seq3.fasta} & header, no data\\
       \texttt{seq4.fasta} & 1 sequence with 5 nucleotides\\
@@ -238,15 +239,17 @@
       \hline
       \end{tabular}
   \end{center}
-  We read each of these eight files, write the sequences to file, and
-  compare the copy with the original.
+  We read each of these eight files, write the sequences to file, and,
+  if a sequence was found, compare the copy with the original.
 #+end_src
 #+begin_src go <<Testing functions>>=
   func TestScanner(t *testing.T) {
-	  for i := 1; i <= 1; i++ {
+	  for i := 1; i <= 8; i++ {
 		  //<<Open files>>
 		  //<<Read and write files>>
-		  //<<Compare files>>
+		  if foundSequence {
+			  //<<Compare files>>
+		  }
 	  }
   }
 #+end_src
@@ -273,7 +276,9 @@
 #+end_src
 #+begin_src go <<Read and write files>>=
   scanner := NewScanner(in)
+  var foundSequence = false
   for scanner.ScanSequence() {
+	  foundSequence = true
 	  seq := scanner.Sequence()
 	  fmt.Fprintf(out, "%s\n", seq)
   }
@@ -288,7 +293,7 @@
   id, _ := ioutil.ReadFile(name)
   od, _ := ioutil.ReadFile(out.Name())
   if !bytes.Equal(id, od) {
-	  t.Errorf("failed reading %q\n", name)
+	  t.Errorf("failed to reproduce %q\n", name)
   }
-  os.Remove(out.Name())
+  //os.Remove(out.Name())
 #+end_src
