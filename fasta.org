@@ -60,8 +60,8 @@
   The package is centered on two data structures, \texttt{Sequence} for
   storing a sequence, and \texttt{Scanner} for parsing data.
   \section{Structure \texttt{Sequence}}
-  !The \texttt{Sequence} structure consists of a header and the actual
-  !sequence data. 
+  !\texttt{Sequence} holds a nucleotide or protein sequence.
+  It consists of a header and the actual sequence data.
   A sequence is printed with data lines of length \texttt{lineLength} or
   less.
 #+end_src
@@ -82,10 +82,9 @@
   func (s *Sequence) LineLength() int { return s.lineLength }
 #+end_src
 #+begin_src latex
-  For \texttt{lineLength} there is also a setter.
-  !If the line length
-  !passed is less than 1, it is assumed that effectively infinite lines
-  !are requested.
+  For \texttt{lineLength} there is also a header.
+  !If the line length passed is less than 1, it is assumed that
+  !effectively infinite lines are requested.
 #+end_src
 #+begin_src go <<Methods>>=
   func (s *Sequence) SetLineLength(l int) {
@@ -102,6 +101,14 @@
   "math"
 #+end_src
 #+begin_src latex
+  !\texttt{AppendToHeader} appends the suffix suf to the header.
+#+end_src
+#+begin_src go <<Methods>>=
+  func (s *Sequence) AppendToHeader(suf string) {
+	  s.header = s.header + suf
+  }
+#+end_src
+#+begin_src latex
   \subsection{Function \texttt{NewSequence}}
   !Function NewSequence returns a new Sequence.
   It takes as argument a header and sequence data. It also initializes
@@ -111,7 +118,8 @@
   func NewSequence(h string, d []byte) *Sequence {
 	  s := new(Sequence)
 	  s.header = h
-	  s.data = append(s.data, d...)
+	  s.data = make([]byte, len(d))
+	  copy(s.data, d)
 	  s.lineLength = DefaultLineLength
 	  return s
   }
@@ -259,52 +267,49 @@ DefaultLineLength = 70
   }
 #+end_src
 #+begin_src latex
-  \subsection{Method \texttt{ReverseComplement}}
-  A routine operation on nucleotide sequences is to compute their
-  reverse complement. Reversal is dealt with in
-  Section~\ref{sec:rev}. Complementation means, we turn the canonical
-  nucleotides \texttt{ACGTU} into \texttt{TGCAU}. In addition, we
-  consider the ambiguous nucleotides listed in Table~\ref{tab:amb}.
-  \begin{table}[ht]
-    \caption{Ambiguity codes for nucleotides}\label{tab:amb}
+  \subsection{Method \texttt{Complement}}
+  !\texttt{Complement} complements nucleotide sequences.
+  In other words, \texttt{ACGTU} is turned into \texttt{TGCAU}. In
+  addition, we consider the ambiguous nucleotides listed in Table~\ref{tab:amb}.
+    \begin{table}[ht]
+      \caption{Ambiguity codes for nucleotides}\label{tab:amb}
+      \begin{center}
+	\begin{tabular}{cl}
+	  \hline
+	  Symbol & Meaning\\\hline
+	  \texttt{B} & \texttt{[\^{ }A]}\\
+	  \texttt{D} & \texttt{[\^{ }C]}\\
+	  \texttt{H} & \texttt{[\^{ }G]}\\
+	  \texttt{K} & \texttt{[GTU]}\\
+	  \texttt{M} & \texttt{[AC]}\\
+	  \texttt{N} & \texttt{[ACGTU]}\\
+	  \texttt{R} & \texttt{[AG]}\\
+	  \texttt{S} & \texttt{[CG]}\\
+	  \texttt{V} & \texttt{[\^{ }TU]}\\
+	  \texttt{W} & \texttt{[ATU]}\\
+	  \texttt{Y} & \texttt{[CTU]}\\\hline
+	\end{tabular}
+      \end{center}
+    \end{table}
+    This means a nucleotide sequence may contain the following characters,
     \begin{center}
-      \begin{tabular}{cl}
-	\hline
-	Symbol & Meaning\\\hline
-	\texttt{B} & \texttt{[\^{ }A]}\\
-	\texttt{D} & \texttt{[\^{ }C]}\\
-	\texttt{H} & \texttt{[\^{ }G]}\\
-	\texttt{K} & \texttt{[GTU]}\\
-	\texttt{M} & \texttt{[AC]}\\
-	\texttt{N} & \texttt{[ACGTU]}\\
-	\texttt{R} & \texttt{[AG]}\\
-	\texttt{S} & \texttt{[CG]}\\
-	\texttt{V} & \texttt{[\^{ }TU]}\\
-	\texttt{W} & \texttt{[ATU]}\\
-	\texttt{Y} & \texttt{[CTU]}\\\hline
-      \end{tabular}
+      \texttt{ACGTUWSMKRYBDHVN},
     \end{center}
-  \end{table}
-  This means a nucleotide sequence may contain the following characters,
-  \begin{center}
-    \texttt{ACGTUWSMKRYBDHVN},
-  \end{center}
-  which are complemented as
-  \begin{center}
-    \texttt{TGCAAWSKMYRVHDBN}.
-  \end{center}
-  Nucleotides may be denoted in caps or lower case
-  characters.
+    which are complemented as
+    \begin{center}
+      \texttt{TGCAAWSKMYRVHDBN}.
+    \end{center}
+    Nucleotides may be denoted in caps or lower case.
 
-  We begin our implementation by constructing a
-  nucleotide dictionary, which we then apply in the complementation.
+    We begin our implementation by constructing a
+    nucleotide dictionary, which we then apply in the complementation.
 #+end_src
 #+begin_src go <<Methods>>=
-  func (s *Sequence) ReverseComplement() {
+  func (s *Sequence) Complement() {
 	  f := []byte("ACGTUWSMKRYBDHVNacgtuwsmkrybdhvn")
 	  r := []byte("TGCAAWSKMYRVHDBNtgcaawskmyrvhdbn")
 	  //<<Construct dictionary>>
-	  //<<Construct reverse complement>>
+	  //<<Construct complement>>
   }
 #+end_src
 #+begin_src latex
@@ -321,12 +326,21 @@ DefaultLineLength = 70
   }
 #+end_src
 #+begin_src latex
-  Now we reverse the sequence and use the dictionary to complement it.
+  Now we use the dictionary to complement the sequence.
 #+end_src
-#+begin_src go <<Construct reverse complement>>=
-  s.Reverse()
+#+begin_src go <<Construct complement>>=
   for i, v := range s.data {
 	  s.data[i] = dic[v]
+  }
+#+end_src
+#+begin_src latex
+  \subsection{Method \texttt{ReverseComplement}}
+  !\texttt{ReverseComplement} reverse-complements a \texttt{Sequence}.
+#+end_src
+#+begin_src go <<Methods>>=
+  func (s *Sequence) ReverseComplement() {
+	  s.Reverse()
+	  s.Complement()
   }
 #+end_src
 #+begin_src latex
