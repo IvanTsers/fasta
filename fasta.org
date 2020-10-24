@@ -101,10 +101,10 @@
   "math"
 #+end_src
 #+begin_src latex
-  !\texttt{AddToHeader} appends the suffix suf to the header.
+  !\texttt{AppendToHeader} appends the suffix suf to the header.
 #+end_src
 #+begin_src go <<Methods>>=
-  func (s *Sequence) AddToHeader(suf string) {
+  func (s *Sequence) AppendToHeader(suf string) {
 	  s.header = s.header + suf
   }
 #+end_src
