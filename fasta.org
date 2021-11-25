@@ -82,7 +82,7 @@
   func (s *Sequence) LineLength() int { return s.lineLength }
 #+end_src
 #+begin_src latex
-  For \texttt{lineLength} there is also a header.
+  For \texttt{lineLength} there is also a setter.
   !If the line length passed is less than 1, it is assumed that
   !effectively infinite lines are requested.
 #+end_src
@@ -174,7 +174,7 @@ DefaultLineLength = 70
 #+end_src
 #+begin_src latex
   \subsection{Method \texttt{String}}
-  Writing a \texttt{Sequence} is delegated the to its \texttt{String} method.
+  Writing a \texttt{Sequence} is delegated to its \texttt{String} method.
   !\texttt{String} wraps the sequence into lines at most \texttt{lineLength} characters long.
   We construct the final string from an intermediate byte slice, into
   which we copy the header and the data. The data is
@@ -270,25 +270,25 @@ DefaultLineLength = 70
 #+begin_src latex
   \subsection{Method \texttt{Complement}}
   !\texttt{Complement} complements nucleotide sequences.
-  In other words, \texttt{ACGTU} is turned into \texttt{TGCAU}. In
+  In other words, \texttt{ACGTU} is turned into \texttt{TGCAT}. In
   addition, we consider the ambiguous nucleotides listed in Table~\ref{tab:amb}.
     \begin{table}[ht]
       \caption{Ambiguity codes for nucleotides}\label{tab:amb}
       \begin{center}
-	\begin{tabular}{cl}
+	\begin{tabular}{clc}
 	  \hline
-	  Symbol & Meaning\\\hline
-	  \texttt{B} & \texttt{[\^{ }A]}\\
-	  \texttt{D} & \texttt{[\^{ }C]}\\
-	  \texttt{H} & \texttt{[\^{ }G]}\\
-	  \texttt{K} & \texttt{[GTU]}\\
-	  \texttt{M} & \texttt{[AC]}\\
-	  \texttt{N} & \texttt{[ACGTU]}\\
-	  \texttt{R} & \texttt{[AG]}\\
-	  \texttt{S} & \texttt{[CG]}\\
-	  \texttt{V} & \texttt{[\^{ }TU]}\\
-	  \texttt{W} & \texttt{[ATU]}\\
-	  \texttt{Y} & \texttt{[CTU]}\\\hline
+	  Symbol & Meaning & Complement\\\hline
+	  \texttt{B} & \texttt{[\^{ }A]} & \ty{V}\\
+	  \texttt{D} & \texttt{[\^{ }C]} & \ty{H}\\
+	  \texttt{H} & \texttt{[\^{ }G]} & \ty{D}\\
+	  \texttt{K} & \texttt{[GTU]} & \ty{M}\\
+	  \texttt{M} & \texttt{[AC]} & \ty{K}\\
+	  \texttt{N} & \texttt{[ACGTU]} & \ty{N}\\
+	  \texttt{R} & \texttt{[AG]} & \ty{Y}\\
+	  \texttt{S} & \texttt{[CG]} & \ty{S}\\
+	  \texttt{V} & \texttt{[\^{ }TU]} & \ty{B}\\
+	  \texttt{W} & \texttt{[ATU]} & \ty{W}\\
+	  \texttt{Y} & \texttt{[CTU]} & \ty{R}\\\hline
 	\end{tabular}
       \end{center}
     \end{table}
@@ -347,15 +347,14 @@ DefaultLineLength = 70
 #+begin_src latex
   \section{Structure \texttt{Scanner}}
   !A \texttt{Sequence} is read using a \texttt{Scanner}.
-  It wraps a
-  \texttt{bufio.Scanner} and we aim to make our scanner behave similarly. So we declare
-  a \texttt{bufio.Scanner} 
-  and add a hook for any additional
-  fields we might need later on.
+  It is modeled on \texttt{bufio.Scanner}, but in contrast to
+  \ty{bufio.Scanner}, it can handle lines of any length. To achieve
+  this, we wrap a \ty{bufio.Reader} rather than a \ty{bufio.Scanner}. We
+  also add a hook for any additional fields we might need later on.
 #+end_src
 #+begin_src go <<Data structures>>=
   type Scanner struct {
-	  s *bufio.Scanner
+	  r *bufio.Reader
 	  //<<Scanner fields>>
   }
 #+end_src
@@ -375,20 +374,28 @@ DefaultLineLength = 70
 #+end_src
 #+begin_src go <<Methods>>=
   func (s *Scanner) ScanLine() bool {
-	  for s.s.Scan() {
-		  b := s.s.Bytes()
-		  //<<Found header?>>
-	  }
-	  return false
+	  var err error
+	  s.line, err = s.r.ReadBytes('\n')
+	  if err != nil { return false }
+	  s.line = bytes.TrimRight(s.line, "\r\n")
+	  //<<Found header?>>
+	  return true
   }
+#+end_src
+#+begin_src latex
+  We add the scanner field \ty{line} for holding a line of sequence
+  data.
+#+end_src
+#+begin_src go <<Scanner fields>>=
+  line []byte
 #+end_src
 #+begin_src latex
   Whenever we find a line that is not empty, we decide whether or not
   it's a header and send a signal by returning \texttt{true}.
 #+end_src
 #+begin_src go <<Found header?>>=
-  if len(b) > 0 {
-	  if b[0] == '>' {
+  if len(s.line) > 0 {
+	  if s.line[0] == '>' {
 		  s.isHeader = true
 	  } else {
 		  s.isHeader = false
@@ -418,7 +425,7 @@ So far, we have only \emph{parsed} a line; we still need a method to
 #+end_src
 #+begin_src go <<Methods>>=
   func (s *Scanner) Line() []byte {
-	  return s.s.Bytes()
+	  return s.line
   }
 #+end_src
 
@@ -563,9 +570,9 @@ So far, we have only \emph{parsed} a line; we still need a method to
 #+end_src
 #+begin_src go <<Functions>>=
   func NewScanner(r io.Reader) *Scanner {
-	  sc := bufio.NewScanner(r)
+	  rd := bufio.NewReader(r)
 	  scanner := Scanner{
-		  s: sc,
+		  r: rd,
 		  firstSequence: true,
 	  }
 	  return &scanner

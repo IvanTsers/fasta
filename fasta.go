@@ -22,7 +22,8 @@ type Sequence struct {
 
 // A Sequence is read using a Scanner.
 type Scanner struct {
-	s                             *bufio.Scanner
+	r                             *bufio.Reader
+	line                          []byte
 	isHeader                      bool
 	lastSequence                  bool
 	previousHeader, currentHeader string
@@ -124,18 +125,21 @@ func (s *Sequence) ReverseComplement() {
 
 // ScanLine reads input line by line. It skips empty lines and marks headers.
 func (s *Scanner) ScanLine() bool {
-	for s.s.Scan() {
-		b := s.s.Bytes()
-		if len(b) > 0 {
-			if b[0] == '>' {
-				s.isHeader = true
-			} else {
-				s.isHeader = false
-			}
-			return true
-		}
+	var err error
+	s.line, err = s.r.ReadBytes('\n')
+	if err != nil {
+		return false
 	}
-	return false
+	s.line = bytes.TrimRight(s.line, "\r\n")
+	if len(s.line) > 0 {
+		if s.line[0] == '>' {
+			s.isHeader = true
+		} else {
+			s.isHeader = false
+		}
+		return true
+	}
+	return true
 }
 func (s *Scanner) IsHeader() bool {
 	return s.isHeader
@@ -143,7 +147,7 @@ func (s *Scanner) IsHeader() bool {
 
 // Line returns the last non-empty line scanned.
 func (s *Scanner) Line() []byte {
-	return s.s.Bytes()
+	return s.line
 }
 
 // Sequence returns the last Sequence scanned.
@@ -197,9 +201,9 @@ func (s *Scanner) ScanSequence() bool {
 
 // NewScanner returns a new Scanner to read from r.
 func NewScanner(r io.Reader) *Scanner {
-	sc := bufio.NewScanner(r)
+	rd := bufio.NewReader(r)
 	scanner := Scanner{
-		s:             sc,
+		r:             rd,
 		firstSequence: true,
 	}
 	return &scanner

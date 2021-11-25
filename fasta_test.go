@@ -103,7 +103,7 @@ func TestScanner(t *testing.T) {
 		if err != nil {
 			t.Errorf("couldn't open %q\n", name)
 		}
-		out, _ := ioutil.TempFile("", "test_*")
+		out, _ := ioutil.TempFile(".", "test_*")
 		scanner := NewScanner(in)
 		var foundSequence = false
 		for scanner.ScanSequence() {
@@ -119,7 +119,7 @@ func TestScanner(t *testing.T) {
 			if !bytes.Equal(id, od) {
 				t.Errorf("failed to reproduce %q\n", name)
 			}
-			//os.Remove(out.Name())
 		}
+		os.Remove(out.Name())
 	}
 }

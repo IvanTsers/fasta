@@ -250,6 +250,7 @@
 		  if foundSequence {
 			  //<<Compare files>>
 		  }
+		  //<<Delete files>>
 	  }
   }
 #+end_src
@@ -262,7 +263,7 @@
   if err != nil {
 	  t.Errorf("couldn't open %q\n", name)
   }
-  out, _ := ioutil.TempFile("", "test_*")
+  out, _ := ioutil.TempFile(".", "test_*")
 #+end_src
 #+begin_src latex
   We import  \texttt{strconv}.
@@ -286,8 +287,7 @@
   out.Close()
 #+end_src
 #+begin_src latex
-  To compare files, their contents are compared. The temporary output
-  file isn't needed any more after this, so we delete it.
+  To compare files, their contents are compared.
 #+end_src
 #+begin_src go <<Compare files>>=
   id, _ := ioutil.ReadFile(name)
@@ -295,5 +295,10 @@
   if !bytes.Equal(id, od) {
 	  t.Errorf("failed to reproduce %q\n", name)
   }
-  //os.Remove(out.Name())
+#+end_src
+#+begin_src latex
+  The temporary output files aren't needed any more, so we delete them.
+#+end_src
+#+begin_src go <<Delete files>>=
+  os.Remove(out.Name())
 #+end_src
