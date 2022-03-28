@@ -97,7 +97,7 @@ func TestReverseComplement(t *testing.T) {
 }
 
 func TestScanner(t *testing.T) {
-	for i := 1; i <= 8; i++ {
+	for i := 1; i <= 9; i++ {
 		name := "./data/seq" + strconv.Itoa(i) + ".fasta"
 		in, err := os.Open(name)
 		if err != nil {
@@ -115,6 +115,9 @@ func TestScanner(t *testing.T) {
 		out.Close()
 		if foundSequence {
 			id, _ := ioutil.ReadFile(name)
+			if i == 9 {
+				id = append(id, '\n')
+			}
 			od, _ := ioutil.ReadFile(out.Name())
 			if !bytes.Equal(id, od) {
 				t.Errorf("failed to reproduce %q\n", name)

@@ -371,23 +371,29 @@ DefaultLineLength = 70
   \subsection{Method \texttt{ScanLine}}
   !\texttt{ScanLine} reads input line by line. It skips
   !empty lines and marks headers.
+  We record the error returned by \ty{ReadBytes}.
 #+end_src
 #+begin_src go <<Methods>>=
   func (s *Scanner) ScanLine() bool {
 	  var err error
 	  s.line, err = s.r.ReadBytes('\n')
-	  if err != nil { return false }
+	  if err != nil {
+		  s.err = err
+		  return false
+	  }
 	  s.line = bytes.TrimRight(s.line, "\r\n")
 	  //<<Found header?>>
+	  s.err = nil
 	  return true
   }
 #+end_src
 #+begin_src latex
-  We add the scanner field \ty{line} for holding a line of sequence
-  data.
+  We add the scanner fields \ty{line} and \ty{err} for holding a line of
+  sequence data and the error encountered reading it.
 #+end_src
 #+begin_src go <<Scanner fields>>=
   line []byte
+  err error
 #+end_src
 #+begin_src latex
   Whenever we find a line that is not empty, we decide whether or not
@@ -459,11 +465,13 @@ So far, we have only \emph{parsed} a line; we still need a method to
     \caption{The structure of a FASTA file.}\label{fig:fas2}
   \end{figure}
 
-  Given this structure, we mark the last sequence. We also store the
-  current and previous headers.
+  Given this structure, we mark the last sequence. This sequence may or
+  may not be terminated by a newline. If it isn't terminated by a
+  newline, there is still data we need to collect. Having done that, we
+  store the current and previous headers.
 
-  Unfortunately, we might not be dealing with a FASTA file in the first
-  place. We decide this right at the end of the scan.
+  Unfortunately, we might not be dealing with a FASTA file after all. We
+  decide this right at the end of the scan.
 #+end_src
 #+begin_src go <<Functions>>=
   func (s *Scanner) ScanSequence() bool {
@@ -474,6 +482,7 @@ So far, we have only \emph{parsed} a line; we still need a method to
 		  //<<Scan a sequence>>
 	  }
 	  s.lastSequence = true
+	  //<<Deal with EOF>>
 	  s.previousHeader = s.currentHeader
 	  //<<Dealing with FASTA file?>>
   }
@@ -528,6 +537,15 @@ So far, we have only \emph{parsed} a line; we still need a method to
 #+end_src
 #+begin_src go <<Scanner fields>>=
   data []byte
+#+end_src
+#+begin_src latex
+  If the last sequence was terminated by EOF rather than newline, we
+  append any data that might still be in the buffer.
+#+end_src
+#+begin_src go <<Deal with EOF>>=
+  if s.err == io.EOF {
+	  s.data = append(s.data, s.Line()...)
+  }
 #+end_src
 #+begin_src latex
   We still need to decide whether we've been dealing with a FASTA file,

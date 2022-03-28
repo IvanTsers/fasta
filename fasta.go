@@ -24,6 +24,7 @@ type Sequence struct {
 type Scanner struct {
 	r                             *bufio.Reader
 	line                          []byte
+	err                           error
 	isHeader                      bool
 	lastSequence                  bool
 	previousHeader, currentHeader string
@@ -128,6 +129,7 @@ func (s *Scanner) ScanLine() bool {
 	var err error
 	s.line, err = s.r.ReadBytes('\n')
 	if err != nil {
+		s.err = err
 		return false
 	}
 	s.line = bytes.TrimRight(s.line, "\r\n")
@@ -139,6 +141,7 @@ func (s *Scanner) ScanLine() bool {
 		}
 		return true
 	}
+	s.err = nil
 	return true
 }
 func (s *Scanner) IsHeader() bool {
@@ -191,6 +194,9 @@ func (s *Scanner) ScanSequence() bool {
 		}
 	}
 	s.lastSequence = true
+	if s.err == io.EOF {
+		s.data = append(s.data, s.Line()...)
+	}
 	s.previousHeader = s.currentHeader
 	if !s.firstSequence {
 		return true

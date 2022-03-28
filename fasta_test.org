@@ -222,7 +222,7 @@
 
 #+begin_src latex
   \subsection{\texttt{Scanner}}
-  The \texttt{Scanner} is tested by reading and writing eight of files,
+  The \texttt{Scanner} is tested by reading and writing nine of files,
   which cover the following cases:
   \begin{center}
     \begin{tabular}{ll}
@@ -236,6 +236,8 @@
       \texttt{seq6.fasta} & 2 sequences with 140 nucleotides each\\
       \texttt{seq7.fasta} & 5 sequences with 700 nucleotides each\\
       \texttt{seq8.fasta} & 5 sequences with 1000 nucleotides each\\
+      \texttt{seq9.fasta} & 5 sequences with 1000 nucleotides each and
+      no terminal newline\\
       \hline
       \end{tabular}
   \end{center}
@@ -244,7 +246,7 @@
 #+end_src
 #+begin_src go <<Testing functions>>=
   func TestScanner(t *testing.T) {
-	  for i := 1; i <= 8; i++ {
+	  for i := 1; i <= 9; i++ {
 		  //<<Open files>>
 		  //<<Read and write files>>
 		  if foundSequence {
@@ -291,6 +293,9 @@
 #+end_src
 #+begin_src go <<Compare files>>=
   id, _ := ioutil.ReadFile(name)
+  if i == 9 {
+	  id = append(id, '\n')
+  }
   od, _ := ioutil.ReadFile(out.Name())
   if !bytes.Equal(id, od) {
 	  t.Errorf("failed to reproduce %q\n", name)
