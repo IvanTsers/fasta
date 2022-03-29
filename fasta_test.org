@@ -338,7 +338,7 @@
   f.Close()
 #+end_src
 #+begin_src latex
-  File \ty{seq9.fasta} also contains 5080 significant bytes but is
+  File \ty{seq9.fasta} also contains 5085 significant bytes but is
   terminated by EOF.
 #+end_src
 #+begin_src go <<Test \ty{Flush} without EOF>>=
