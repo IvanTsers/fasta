@@ -124,7 +124,7 @@ func (s *Sequence) ReverseComplement() {
 	s.Complement()
 }
 
-// ScanLine reads input line by line. It skips empty lines and marks headers.
+// ScanLine reads input line by line. It skips empty lines and marks headers. The last call to ScanLine should be followed by a call to Flush to retrieve any bytes not terminated by newline.
 func (s *Scanner) ScanLine() bool {
 	var err error
 	s.line, err = s.r.ReadBytes('\n')
@@ -151,6 +151,15 @@ func (s *Scanner) IsHeader() bool {
 // Line returns the last non-empty line scanned.
 func (s *Scanner) Line() []byte {
 	return s.line
+}
+
+//  Flush returns any bytes remaining in the buffer after the  last call to ScanLine.
+func (s *Scanner) Flush() []byte {
+	var dum []byte
+	if s.err == io.EOF {
+		return s.line
+	}
+	return dum
 }
 
 // Sequence returns the last Sequence scanned.

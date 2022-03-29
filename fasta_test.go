@@ -126,3 +126,29 @@ func TestScanner(t *testing.T) {
 		os.Remove(out.Name())
 	}
 }
+func TestFlush(t *testing.T) {
+	f, _ := os.Open("data/seq8.fasta")
+	sc := NewScanner(f)
+	w := 5085
+	g := 0
+	for sc.ScanLine() {
+		g += len(sc.Line())
+	}
+	g += len(sc.Flush())
+	if g != w {
+		t.Errorf("get:\n%d\nwant:\n%d\n", g, w)
+	}
+	f.Close()
+	f, _ = os.Open("data/seq9.fasta")
+	sc = NewScanner(f)
+	g = 0
+	for sc.ScanLine() {
+		g += len(sc.Line())
+	}
+	g += len(sc.Flush())
+	if g != w {
+		t.Errorf("get:\n%d\nwant:\n%d\n", g, w)
+	}
+	f.Close()
+
+}

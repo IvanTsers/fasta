@@ -369,8 +369,10 @@ DefaultLineLength = 70
   by sequence. We first deal with lines, then use the result to deal
   with sequences.
   \subsection{Method \texttt{ScanLine}}
-  !\texttt{ScanLine} reads input line by line. It skips
-  !empty lines and marks headers.
+  !\texttt{ScanLine} reads input line by line. It skips empty lines and
+  !marks headers. The last call to \ty{ScanLine} should be followed by a
+  !call to \ty{Flush} to retrieve any bytes not terminated by newline.
+
   We record the error returned by \ty{ReadBytes}.
 #+end_src
 #+begin_src go <<Methods>>=
@@ -434,8 +436,23 @@ So far, we have only \emph{parsed} a line; we still need a method to
 	  return s.line
   }
 #+end_src
+#+begin_src latex
+  \subsection{Method \texttt{Flush}}
+  ! \texttt{Flush} returns any bytes remaining in the buffer after the
+  ! last call to \ty{ScanLine}.
 
-
+  \ty{Flush} returns the bytes on a line terminated by EOF rather than
+  newline.
+#+end_src
+#+begin_src go <<Methods>>=
+  func (s *Scanner) Flush() []byte {
+	  var dum []byte
+	  if s.err == io.EOF {
+		  return s.line
+	  }
+	  return dum
+  }
+#+end_src
 #+begin_src latex
   \subsection{Method \texttt{ScanSequence}}
   ! \texttt{ScanSequence} reads input \texttt{Sequence} by \texttt{Sequence}.
