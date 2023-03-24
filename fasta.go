@@ -13,6 +13,8 @@ const (
 	DefaultLineLength = 70
 )
 
+var dic []byte
+
 // Sequence holds a nucleotide or protein sequence.
 type Sequence struct {
 	header     string
@@ -104,14 +106,16 @@ func (s *Sequence) Reverse() {
 
 // Complement complements nucleotide sequences.
 func (s *Sequence) Complement() {
-	f := []byte("ACGTUWSMKRYBDHVNacgtuwsmkrybdhvn")
-	r := []byte("TGCAAWSKMYRVHDBNtgcaawskmyrvhdbn")
-	var dic [256]byte
-	for i, _ := range dic {
-		dic[i] = byte(i)
-	}
-	for i, v := range f {
-		dic[v] = r[i]
+	if dic == nil {
+		dic = make([]byte, 256)
+		f := []byte("ACGTUWSMKRYBDHVNacgtuwsmkrybdhvn")
+		r := []byte("TGCAAWSKMYRVHDBNtgcaawskmyrvhdbn")
+		for i, _ := range dic {
+			dic[i] = byte(i)
+		}
+		for i, v := range f {
+			dic[v] = r[i]
+		}
 	}
 	for i, v := range s.data {
 		s.data[i] = dic[v]

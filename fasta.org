@@ -52,6 +52,7 @@
   const (
 	  //<<Constants>>
   )
+  //<<Variables>>
   //<<Data structures>>
   //<<Methods>>
   //<<Functions>>
@@ -303,22 +304,32 @@ DefaultLineLength = 70
     Nucleotides may be denoted in caps or lower case.
 
     We begin our implementation by constructing a
-    nucleotide dictionary, which we then apply in the complementation.
+    nucleotide dictionary, which we then apply in the
+    complementation. We construct the dictionary only for the first call
+    to \ty{Complement}.
 #+end_src
 #+begin_src go <<Methods>>=
   func (s *Sequence) Complement() {
-	  f := []byte("ACGTUWSMKRYBDHVNacgtuwsmkrybdhvn")
-	  r := []byte("TGCAAWSKMYRVHDBNtgcaawskmyrvhdbn")
-	  //<<Construct dictionary>>
+	  if dic == nil {
+		  //<<Construct dictionary>>
+	  }
 	  //<<Construct complement>>
   }
+#+end_src
+#+begin_export latex
+We declare the global dictionary variable.
+#+end_export
+#+begin_src go <<Variables>>=
+  var dic []byte
 #+end_src
 #+begin_src latex
   The dictionary consists of all $2^8=256$ bytes. Only nucleotides are
   changed.
 #+end_src
 #+begin_src go <<Construct dictionary>>=
-  var dic [256]byte
+  dic = make([]byte, 256)
+  f := []byte("ACGTUWSMKRYBDHVNacgtuwsmkrybdhvn")
+  r := []byte("TGCAAWSKMYRVHDBNtgcaawskmyrvhdbn")
   for i, _ := range dic {
 	  dic[i] = byte(i)
   }
