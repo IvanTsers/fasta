@@ -83,9 +83,19 @@
   func (s *Sequence) LineLength() int { return s.lineLength }
 #+end_src
 #+begin_src latex
-  For \texttt{lineLength} there is also a setter.
-  !If the line length passed is less than 1, it is assumed that
-  !effectively infinite lines are requested.
+  For \ty{header} and \texttt{lineLength} there are also a setters. We
+  begin with the header.
+  !\ty{SetHeader} replaces the existing header.
+#+end_src
+#+begin_src go <<Methods>>=
+  func (s *Sequence) SetHeader(h string) {
+	  s.header = h
+  }
+#+end_src
+#+begin_src latex
+  !\ty{SetLineLength} replaces the current line length. If the line
+  !length passed is less than 1, it is assumed that effectively infinite
+  !lines are requested.
 #+end_src
 #+begin_src go <<Methods>>=
   func (s *Sequence) SetLineLength(l int) {

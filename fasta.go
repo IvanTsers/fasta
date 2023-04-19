@@ -38,7 +38,12 @@ func (s *Sequence) Header() string  { return s.header }
 func (s *Sequence) Data() []byte    { return s.data }
 func (s *Sequence) LineLength() int { return s.lineLength }
 
-// If the line length passed is less than 1, it is assumed that effectively infinite lines are requested.
+// SetHeader replaces the existing header.
+func (s *Sequence) SetHeader(h string) {
+	s.header = h
+}
+
+// SetLineLength replaces the current line length. If the line length passed is less than 1, it is assumed that effectively infinite lines are requested.
 func (s *Sequence) SetLineLength(l int) {
 	s.lineLength = l
 	if s.lineLength < 1 {
