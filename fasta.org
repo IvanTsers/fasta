@@ -365,6 +365,33 @@ We declare the global dictionary variable.
 	  s.Complement()
   }
 #+end_src
+#+begin_export latex
+  \subsection{Method \texttt{Length}}
+  !Method \texttt{Length} returns the number of residues in
+  !\texttt{Sequence}.
+#+end_export
+#+begin_src go <<Methods>>=
+  func (s *Sequence) Length() int {
+	  return len(s.data)
+  }
+#+end_src
+#+begin_export latex
+  \subsection{Method \texttt{GC}}
+  !Method \texttt{GC} returns the fraction of \texttt{GC} nucleotides in
+  !\texttt{Sequence}.
+#+end_export
+#+begin_src go <<Methods>>=
+  func (s *Sequence) GC() float64 {
+	  l := float64(s.Length())
+	  gc := 0.0
+	  for _, r := range s.data {
+		  if r == 'G' || r == 'C' {
+			  gc++
+		  }
+	  }
+	  return gc/l
+  }
+#+end_src
 #+begin_src latex
   \section{Structure \texttt{Scanner}}
   !A \texttt{Sequence} is read using a \texttt{Scanner}.

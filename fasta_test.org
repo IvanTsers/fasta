@@ -219,7 +219,42 @@
     }
   }
 #+end_src
-
+#+begin_export latex
+  \subsubsection{Method \texttt{Length}}
+  We generate a five-nucleotide sequence, measure its length, and
+  compare what we want to that we get.
+#+end_export
+#+begin_src go <<Testing functions>>=
+  func TestLength(t *testing.T){
+	  nuc := "ACCGT"
+	  seq := NewSequence("", []byte(nuc))
+	  l := seq.Length()
+	  if l != len(nuc) {
+		  t.Errorf("want:\n%d\nget:\n%d\n",
+			  len(nuc), l)
+	  }
+  }
+#+end_src
+#+begin_export latex
+\subsubsection{Method \texttt{GC}}
+We generate some short sequences, measure their GC content, and
+compare what we want with what we get.
+#+end_export
+#+begin_src go <<Testing functions>>=
+  func TestGC(t *testing.T){
+	  s := []string{"ACCGT", "GGC", "AATAT"}
+	  want := []float64{3.0/5.0, 3.0/3.0, 0.0/5.0}
+	  get := 1.1
+	  for i, r := range s {
+		  seq := NewSequence("", []byte(r))
+		  get = seq.GC()
+		  if get != want[i] {
+			  t.Errorf("want:\n%v\nget:\n%v\n",
+				  want[i], get)
+		  }
+	  }
+  }
+#+end_src
 #+begin_src latex
   \subsection{\texttt{Scanner}}
   The \texttt{Scanner} is tested by reading and writing nine of files,
