@@ -1,3 +1,3 @@
-module github.com/evolbioinf/fasta
+module github.com/ivantsers/fasta
 
 go 1.17
