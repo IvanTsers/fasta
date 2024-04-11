@@ -133,6 +133,23 @@ func (s *Sequence) ReverseComplement() {
 	s.Complement()
 }
 
+// Method Length returns the number of residues in Sequence.
+func (s *Sequence) Length() int {
+	return len(s.data)
+}
+
+// Method GC returns the fraction of GC nucleotides in Sequence.
+func (s *Sequence) GC() float64 {
+	l := float64(s.Length())
+	gc := 0.0
+	for _, r := range s.data {
+		if r == 'G' || r == 'C' {
+			gc++
+		}
+	}
+	return gc / l
+}
+
 // ScanLine reads input line by line. It skips empty lines and marks headers. The last call to ScanLine should be followed by a call to Flush to retrieve any bytes not terminated by newline.
 func (s *Scanner) ScanLine() bool {
 	var err error
@@ -162,7 +179,7 @@ func (s *Scanner) Line() []byte {
 	return s.line
 }
 
-//  Flush returns any bytes remaining in the buffer after the  last call to ScanLine.
+// Flush returns any bytes remaining in the buffer after the  last call to ScanLine.
 func (s *Scanner) Flush() []byte {
 	var dum []byte
 	if s.err == io.EOF {
@@ -193,7 +210,7 @@ func NewSequence(h string, d []byte) *Sequence {
 	return s
 }
 
-//  ScanSequence reads input Sequence by Sequence.
+// ScanSequence reads input Sequence by Sequence.
 func (s *Scanner) ScanSequence() bool {
 	if s.lastSequence {
 		return false
