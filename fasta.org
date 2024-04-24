@@ -83,13 +83,21 @@
   func (s *Sequence) LineLength() int { return s.lineLength }
 #+end_src
 #+begin_src latex
-  For \ty{header} and \texttt{lineLength} there are also a setters. We
-  begin with the header.
+  For \ty{header}, \ty{data}, and \texttt{lineLength} there are also
+  setters. We begin with the header.
   !\ty{SetHeader} replaces the existing header.
 #+end_src
 #+begin_src go <<Methods>>=
   func (s *Sequence) SetHeader(h string) {
 	  s.header = h
+  }
+#+end_src
+#+begin_src latex
+  !\ty{SetData} replaces the existing data.
+#+end_src
+#+begin_src go <<Methods>>=
+  func (s *Sequence) SetData(d []byte) {
+	  s.data = d
   }
 #+end_src
 #+begin_src latex
