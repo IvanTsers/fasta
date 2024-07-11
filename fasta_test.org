@@ -258,8 +258,10 @@ compare what we want with what we get.
 #+begin_src latex
   \subsection{\texttt{Scanner}}
   The \texttt{Scanner} is tested by reading and writing nine of files,
-  which cover the following cases:
-  \begin{center}
+  which cover the cases described in Table~\ref{tab:testfiles}.
+  \begin{table}
+    \caption{Test \texttt{fasta} files}
+    \centering
     \begin{tabular}{ll}
       \hline
       Name & Content\\\hline
@@ -275,7 +277,8 @@ compare what we want with what we get.
       no terminal newline\\
       \hline
       \end{tabular}
-  \end{center}
+    \label{tab:testfiles}
+  \end{table}
   We read each of these eight files, write the sequences to file, and,
   if a sequence was found, compare the copy with the original.
 #+end_src
@@ -389,4 +392,58 @@ compare what we want with what we get.
   }
   f.Close()
 #+end_src
-
+#+begin_export latex
+\subsection{High-level functions}
+\subsubsection{\texttt{ReadAndConcatenate}}
+To test \texttt{ReadAndConcatenate}, we read the test files
+(Table~\ref{tab:testfiles}).
+#+end_export
+#+begin_src go <<Testing functions>>=
+  func TestReadAndConcatenate(t *testing.T) {
+	  //<<Define expected values>>
+	  for i := 1; i <= 9; i++ {
+		  name := "./data/seq" + strconv.Itoa(i) +
+			  ".fasta"
+		  f, err := os.Open(name)
+		  if err != nil {
+			  t.Errorf("couldn't open %q\n", name)
+		  }
+		  seq := ReadAndConcatenate(f)
+		  //<<Compare actual values to expected>>
+	  }
+  }
+#+end_src
+#+begin_export latex
+We define arrays of expected values.
+#+end_export
+#+begin_src go <<Define expected values>>=
+  wantDataLen := [9]int{0, 0, 0, 5, 2*70, 2*140, 5*700, 5*1000,
+	  5*1000}
+  wantHeaders := [9]string{"",
+	  "|",
+	  "|seq3",
+	  "|Rand_1; G/C=0.20",
+	  "|Rand_1; G/C=0.41|Rand_2; G/C=0.54",
+	  "|Rand_1; G/C=0.50|Rand_2; G/C=0.50",
+	  "|Rand_1; G/C=0.50|Rand_2; G/C=0.50|Rand_3; " +
+		  "G/C=0.50|Rand_4; G/C=0.50|Rand_5; G/C=0.50",
+	  "|Rand_1; G/C=0.50|Rand_2; G/C=0.50|Rand_3; " +
+		  "G/C=0.50|Rand_4; G/C=0.50|Rand_5; G/C=0.50",
+	  "|Rand_1; G/C=0.50|Rand_2; G/C=0.50|Rand_3; " +
+		  "G/C=0.50|Rand_4; G/C=0.50|Rand_5; G/C=0.50"}
+#+end_src
+#+begin_export latex
+We compare what we want with what we get.
+#+end_export
+#+begin_src go <<Compare actual values to expected>>=
+  wl := wantDataLen[i-1]
+  gl := seq.Length()
+  if gl != wl {
+	  t.Errorf("Data:\nget:\n%d\nwant:\n%d\n", gl, wl)
+  }
+  wh := wantHeaders[i-1]
+  gh := seq.Header()
+  if gh != wh {
+	  t.Errorf("Headers:\nget:\n%s\nwant:\n%s\n", gh, wh)
+  }
+#+end_src

@@ -1,4 +1,5 @@
 #+begin_src latex
+  \newpage
   \section{Introduction}
   The FASTA file format is widely used in molecular biology for storing
   nucleotide and protein sequences. As an example, Figure~\ref{fig:fas}
@@ -674,4 +675,46 @@ So far, we have only \emph{parsed} a line; we still need a method to
 #+end_src
 #+begin_src go <<Imports>>=
   "io"
+#+end_src
+#+begin_export latex
+\section{High-level functions}
+\subsection{ReadAndConcatenate}
+! \texttt{ReadAndConcatenate} reads all sequences from a file and
+concatenates their headers and data tnto one \texttt{Sequence} entry.
+We declare variables for scanner, last scanned sequence, data (the
+nucleotides), and headers. Then we concatenate fasta entries as we
+advance in the file. Upon collecting the entries, we close the file,
+convert nucleotides to uppercase, create and return the output
+\texttt{Sequence}.
+#+end_export
+#+begin_src go <<Functions>>=
+  func ReadAndConcatenate(f *os.File) *Sequence {
+	  sc := NewScanner(f)
+	  s := sc.Sequence()
+	  d := s.Data()
+	  h := []byte(s.Header())
+	  for sc.ScanSequence() {
+		  //<<Concatenate fasta entries>>
+	  }
+	  f.Close()
+	  d = bytes.ToUpper(d)
+	  cSeq := NewSequence(string(h), d)
+	  return cSeq
+  }
+#+end_src
+#+begin_export latex
+We impor \texttt{os}.
+#+end_export
+#+begin_src go <<Imports>>=
+  "os"
+#+end_src
+#+begin_export latex
+We read a sequence and append its data and header to the corresponding
+slices.
+#+end_export
+#+begin_src go <<Concatenate fasta entries>>=
+  s = sc.Sequence()
+  h = append(h, '|')
+  h = append(h, []byte(s.Header())...)
+  d = append(d, s.Data()...)
 #+end_src

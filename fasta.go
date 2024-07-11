@@ -7,6 +7,7 @@ import (
 	"io"
 	"math"
 	"math/rand"
+	"os"
 )
 
 const (
@@ -253,4 +254,22 @@ func NewScanner(r io.Reader) *Scanner {
 		firstSequence: true,
 	}
 	return &scanner
+}
+
+// ReadAndConcatenate reads all sequences from a file and
+func ReadAndConcatenate(f *os.File) *Sequence {
+	sc := NewScanner(f)
+	s := sc.Sequence()
+	d := s.Data()
+	h := []byte(s.Header())
+	for sc.ScanSequence() {
+		s = sc.Sequence()
+		h = append(h, '|')
+		h = append(h, []byte(s.Header())...)
+		d = append(d, s.Data()...)
+	}
+	f.Close()
+	d = bytes.ToUpper(d)
+	cSeq := NewSequence(string(h), d)
+	return cSeq
 }
