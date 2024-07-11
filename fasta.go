@@ -156,6 +156,21 @@ func (s *Sequence) GC() float64 {
 	return gc / l
 }
 
+// Method KeepOnlyATGC removes non-canonical nucleotides from Sequence through reslicing (that is, keeps only ATGC/atgc).
+func (s *Sequence) KeepOnlyATGC() {
+	d := s.Data()
+	i := 0
+	for _, c := range d {
+		if c == 'A' || c == 'C' || c == 'G' || c == 'T' ||
+			c == 'a' || c == 'c' || c == 'g' || c == 't' {
+			d[i] = c
+			i++
+		}
+	}
+	d = d[:i]
+	s.SetData(d)
+}
+
 // ScanLine reads input line by line. It skips empty lines and marks headers. The last call to ScanLine should be followed by a call to Flush to retrieve any bytes not terminated by newline.
 func (s *Scanner) ScanLine() bool {
 	var err error

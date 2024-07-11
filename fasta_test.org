@@ -243,15 +243,33 @@ compare what we want with what we get.
 #+begin_src go <<Testing functions>>=
   func TestGC(t *testing.T){
 	  s := []string{"ACCGT", "GGC", "AATAT"}
-	  want := []float64{3.0/5.0, 3.0/3.0, 0.0/5.0}
-	  get := 1.1
+	  w := []float64{3.0/5.0, 3.0/3.0, 0.0/5.0}
+	  g := 1.1
 	  for i, r := range s {
 		  seq := NewSequence("", []byte(r))
-		  get = seq.GC()
-		  if get != want[i] {
+		  g = seq.GC()
+		  if g != w[i] {
 			  t.Errorf("want:\n%v\nget:\n%v\n",
-				  want[i], get)
+				  w[i], g)
 		  }
+	  }
+  }
+#+end_src
+#+begin_export latex
+\subsubsection{Method \texttt{KeepOnlyATGC}}
+To test this method, we generate a short sequence containing
+non-canonical nucleotides, call the method, and compare what we want
+with what we get.
+#+end_export
+#+begin_src go <<Testing functions>>=
+  func TestKeepOnlyATGC(t *testing.T){
+	  s := "XXATATNGTnCactAploenTTg"
+	  w := "ATATGTCactATTg"
+	  seq := NewSequence("", []byte(s))
+	  seq.KeepOnlyATGC()
+	  g := string(seq.Data())
+	  if g != w {
+		  t.Errorf("want:\n%s\nget:\n%s\n", w, g)
 	  }
   }
 #+end_src

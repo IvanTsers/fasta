@@ -95,7 +95,38 @@ func TestReverseComplement(t *testing.T) {
 			string(ori.data))
 	}
 }
-
+func TestLength(t *testing.T) {
+	nuc := "ACCGT"
+	seq := NewSequence("", []byte(nuc))
+	l := seq.Length()
+	if l != len(nuc) {
+		t.Errorf("want:\n%d\nget:\n%d\n",
+			len(nuc), l)
+	}
+}
+func TestGC(t *testing.T) {
+	s := []string{"ACCGT", "GGC", "AATAT"}
+	w := []float64{3.0 / 5.0, 3.0 / 3.0, 0.0 / 5.0}
+	g := 1.1
+	for i, r := range s {
+		seq := NewSequence("", []byte(r))
+		g = seq.GC()
+		if g != w[i] {
+			t.Errorf("want:\n%v\nget:\n%v\n",
+				w[i], g)
+		}
+	}
+}
+func TestKeepOnlyATGC(t *testing.T) {
+	s := "XXATATNGTnCactAploenTTg"
+	w := "ATATGTCactATTg"
+	seq := NewSequence("", []byte(s))
+	seq.KeepOnlyATGC()
+	g := string(seq.Data())
+	if g != w {
+		t.Errorf("want:\n%s\nget:\n%s\n", w, g)
+	}
+}
 func TestScanner(t *testing.T) {
 	for i := 1; i <= 9; i++ {
 		name := "./data/seq" + strconv.Itoa(i) + ".fasta"
@@ -150,5 +181,39 @@ func TestFlush(t *testing.T) {
 		t.Errorf("get:\n%d\nwant:\n%d\n", g, w)
 	}
 	f.Close()
-
+}
+func TestReadAndConcatenate(t *testing.T) {
+	wantDataLen := [9]int{0, 0, 0, 5, 2 * 70, 2 * 140, 5 * 700, 5 * 1000,
+		5 * 1000}
+	wantHeaders := [9]string{"",
+		"|",
+		"|seq3",
+		"|Rand_1; G/C=0.20",
+		"|Rand_1; G/C=0.41|Rand_2; G/C=0.54",
+		"|Rand_1; G/C=0.50|Rand_2; G/C=0.50",
+		"|Rand_1; G/C=0.50|Rand_2; G/C=0.50|Rand_3; " +
+			"G/C=0.50|Rand_4; G/C=0.50|Rand_5; G/C=0.50",
+		"|Rand_1; G/C=0.50|Rand_2; G/C=0.50|Rand_3; " +
+			"G/C=0.50|Rand_4; G/C=0.50|Rand_5; G/C=0.50",
+		"|Rand_1; G/C=0.50|Rand_2; G/C=0.50|Rand_3; " +
+			"G/C=0.50|Rand_4; G/C=0.50|Rand_5; G/C=0.50"}
+	for i := 1; i <= 9; i++ {
+		name := "./data/seq" + strconv.Itoa(i) +
+			".fasta"
+		f, err := os.Open(name)
+		if err != nil {
+			t.Errorf("couldn't open %q\n", name)
+		}
+		seq := ReadAndConcatenate(f)
+		wl := wantDataLen[i-1]
+		gl := seq.Length()
+		if gl != wl {
+			t.Errorf("Data:\nget:\n%d\nwant:\n%d\n", gl, wl)
+		}
+		wh := wantHeaders[i-1]
+		gh := seq.Header()
+		if gh != wh {
+			t.Errorf("Headers:\nget:\n%s\nwant:\n%s\n", gh, wh)
+		}
+	}
 }

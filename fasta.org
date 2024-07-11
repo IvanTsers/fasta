@@ -401,6 +401,26 @@ We declare the global dictionary variable.
 	  return gc/l
   }
 #+end_src
+#+begin_export latex
+\subsection{Method \texttt{KeepOnlyATGC}}
+!Method \texttt{KeepOnlyATGC} removes non-canonical nucleotides from
+!\texttt{Sequence} through reslicing (that is, keeps only ATGC/atgc).
+#+end_export
+#+begin_src go <<Methods>>=
+  func (s *Sequence) KeepOnlyATGC() {
+	  d := s.Data()
+	  i := 0
+	  for _, c := range d {
+		  if c == 'A' || c == 'C' || c == 'G' || c == 'T' ||
+		     c == 'a' || c == 'c' || c == 'g' || c == 't' {
+			  d[i] = c
+			  i++
+		  }
+	  }
+	  d = d[:i]
+	  s.SetData(d)
+  }
+#+end_src
 #+begin_src latex
   \section{Structure \texttt{Scanner}}
   !A \texttt{Sequence} is read using a \texttt{Scanner}.
