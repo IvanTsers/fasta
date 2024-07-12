@@ -183,19 +183,19 @@ func TestFlush(t *testing.T) {
 	f.Close()
 }
 func TestReadAndConcatenate(t *testing.T) {
-	wantDataLen := [9]int{0, 0, 0, 5, 2 * 70, 2 * 140, 5 * 700, 5 * 1000,
-		5 * 1000}
+	wantDataLen := [9]int{0, 0, 0, 5, 2*70 + 1, 2*140 + 1, 5*700 + 4, 5*1000 + 4,
+		5*1000 + 4}
 	wantHeaders := [9]string{"",
-		"|",
-		"|seq3",
-		"|Rand_1; G/C=0.20",
-		"|Rand_1; G/C=0.41|Rand_2; G/C=0.54",
-		"|Rand_1; G/C=0.50|Rand_2; G/C=0.50",
-		"|Rand_1; G/C=0.50|Rand_2; G/C=0.50|Rand_3; " +
+		"",
+		"seq3",
+		"Rand_1; G/C=0.20",
+		"Rand_1; G/C=0.41|Rand_2; G/C=0.54",
+		"Rand_1; G/C=0.50|Rand_2; G/C=0.50",
+		"Rand_1; G/C=0.50|Rand_2; G/C=0.50|Rand_3; " +
 			"G/C=0.50|Rand_4; G/C=0.50|Rand_5; G/C=0.50",
-		"|Rand_1; G/C=0.50|Rand_2; G/C=0.50|Rand_3; " +
+		"Rand_1; G/C=0.50|Rand_2; G/C=0.50|Rand_3; " +
 			"G/C=0.50|Rand_4; G/C=0.50|Rand_5; G/C=0.50",
-		"|Rand_1; G/C=0.50|Rand_2; G/C=0.50|Rand_3; " +
+		"Rand_1; G/C=0.50|Rand_2; G/C=0.50|Rand_3; " +
 			"G/C=0.50|Rand_4; G/C=0.50|Rand_5; G/C=0.50"}
 	for i := 1; i <= 9; i++ {
 		name := "./data/seq" + strconv.Itoa(i) +
@@ -204,11 +204,11 @@ func TestReadAndConcatenate(t *testing.T) {
 		if err != nil {
 			t.Errorf("couldn't open %q\n", name)
 		}
-		seq := ReadAndConcatenate(f)
+		seq := ReadAndConcatenate(f, '|', '!')
 		wl := wantDataLen[i-1]
 		gl := seq.Length()
 		if gl != wl {
-			t.Errorf("Data:\nget:\n%d\nwant:\n%d\n", gl, wl)
+			t.Errorf("%s Data:\nget:\n%d\nwant:\n%d\n", name, gl, wl)
 		}
 		wh := wantHeaders[i-1]
 		gh := seq.Header()

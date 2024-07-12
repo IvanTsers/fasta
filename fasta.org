@@ -700,7 +700,10 @@ So far, we have only \emph{parsed} a line; we still need a method to
 \section{High-level functions}
 \subsection{ReadAndConcatenate}
 ! \texttt{ReadAndConcatenate} reads all sequences from a file and
-concatenates their headers and data tnto one \texttt{Sequence} entry.
+!concatenates their headers and data tnto one \texttt{Sequence} entry.
+!Sentinel bytes (if specified) are inserted between concatenated
+!pieces of headers and data.
+
 We declare variables for scanner, last scanned sequence, data (the
 nucleotides), and headers. Then we concatenate fasta entries as we
 advance in the file. Upon collecting the entries, we close the file,
@@ -708,13 +711,17 @@ convert nucleotides to uppercase, create and return the output
 \texttt{Sequence}.
 #+end_export
 #+begin_src go <<Functions>>=
-  func ReadAndConcatenate(f *os.File) *Sequence {
+  func ReadAndConcatenate(f *os.File,
+	  sentinelHeader byte,
+	  sentinelData byte) *Sequence {
 	  sc := NewScanner(f)
 	  s := sc.Sequence()
+	  numSeq := 0
 	  d := s.Data()
 	  h := []byte(s.Header())
 	  for sc.ScanSequence() {
 		  //<<Concatenate fasta entries>>
+		  numSeq += 1
 	  }
 	  f.Close()
 	  d = bytes.ToUpper(d)
@@ -734,7 +741,11 @@ slices.
 #+end_export
 #+begin_src go <<Concatenate fasta entries>>=
   s = sc.Sequence()
-  h = append(h, '|')
+  s.KeepOnlyATGC()
+  if numSeq >= 1 {
+	  h = append(h, sentinelHeader)
+	  d = append(d, sentinelData)
+  }
   h = append(h, []byte(s.Header())...)
   d = append(d, s.Data()...)
 #+end_src

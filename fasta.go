@@ -271,17 +271,25 @@ func NewScanner(r io.Reader) *Scanner {
 	return &scanner
 }
 
-// ReadAndConcatenate reads all sequences from a file and
-func ReadAndConcatenate(f *os.File) *Sequence {
+// ReadAndConcatenate reads all sequences from a file and concatenates their headers and data tnto one Sequence entry. Sentinel bytes (if specified) are inserted between concatenated pieces of headers and data.
+func ReadAndConcatenate(f *os.File,
+	sentinelHeader byte,
+	sentinelData byte) *Sequence {
 	sc := NewScanner(f)
 	s := sc.Sequence()
+	numSeq := 0
 	d := s.Data()
 	h := []byte(s.Header())
 	for sc.ScanSequence() {
 		s = sc.Sequence()
-		h = append(h, '|')
+		s.KeepOnlyATGC()
+		if numSeq >= 1 {
+			h = append(h, sentinelHeader)
+			d = append(d, sentinelData)
+		}
 		h = append(h, []byte(s.Header())...)
 		d = append(d, s.Data()...)
+		numSeq += 1
 	}
 	f.Close()
 	d = bytes.ToUpper(d)
