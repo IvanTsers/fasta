@@ -402,22 +402,24 @@ We declare the global dictionary variable.
   }
 #+end_src
 #+begin_export latex
-\subsection{Method \texttt{KeepOnlyATGC}}
-!Method \texttt{KeepOnlyATGC} removes non-canonical nucleotides from
-!\texttt{Sequence} through reslicing (that is, keeps only ATGC/atgc).
+\subsection{Method \texttt{Clean}}
+!Method \texttt{Clean} removes non-canonical nucleotides from a
+!\texttt{Sequence} (that is, keeps only ATGC/atgc) and converts what
+!remains to uppercase.
 #+end_export
 #+begin_src go <<Methods>>=
-  func (s *Sequence) KeepOnlyATGC() {
+  func (s *Sequence) Clean() {
 	  d := s.Data()
 	  i := 0
 	  for _, c := range d {
 		  if c == 'A' || c == 'C' || c == 'G' || c == 'T' ||
 		     c == 'a' || c == 'c' || c == 'g' || c == 't' {
-			  d[i] = c
-			  i++
-		  }
+		       d[i] = c
+		       i++
+	     }
 	  }
 	  d = d[:i]
+	  d = bytes.ToUpper(d)
 	  s.SetData(d)
   }
 #+end_src
@@ -698,35 +700,19 @@ So far, we have only \emph{parsed} a line; we still need a method to
 #+end_src
 #+begin_export latex
 \section{High-level functions}
-\subsection{ReadAndConcatenate}
-! \texttt{ReadAndConcatenate} reads all sequences from a file and
-!concatenates their headers and data tnto one \texttt{Sequence} entry.
-!Sentinel bytes (if specified) are inserted between concatenated
-!pieces of headers and data.
-
-We declare variables for scanner, last scanned sequence, data (the
-nucleotides), and headers. Then we concatenate fasta entries as we
-advance in the file. Upon collecting the entries, we close the file,
-convert nucleotides to uppercase, create and return the output
-\texttt{Sequence}.
+\subsection{ReadAll}
+!\texttt{ReadAll} reads all sequences from a file and returns a slice
+!of \texttt{Sequences}.
 #+end_export
 #+begin_src go <<Functions>>=
-  func ReadAndConcatenate(f *os.File,
-	  sentinelHeader byte,
-	  sentinelData byte) *Sequence {
+  func ReadAll(f *os.File) []*Sequence {
 	  sc := NewScanner(f)
-	  s := sc.Sequence()
-	  numSeq := 0
-	  d := s.Data()
-	  h := []byte(s.Header())
+	  var s []*Sequence
 	  for sc.ScanSequence() {
-		  //<<Concatenate fasta entries>>
-		  numSeq += 1
+		  s = append(s, sc.Sequence())
 	  }
 	  f.Close()
-	  d = bytes.ToUpper(d)
-	  cSeq := NewSequence(string(h), d)
-	  return cSeq
+	  return s
   }
 #+end_src
 #+begin_export latex
@@ -736,16 +722,55 @@ We impor \texttt{os}.
   "os"
 #+end_src
 #+begin_export latex
-We read a sequence and append its data and header to the corresponding
-slices.
+\subsection{Concatenate}
+!\texttt{Concatenate} accepts a slice of \texttt{Sequences} and a
+!sentinel byte. It concatenates the slice into a single
+!\texttt{Sequence} entry, where all headers and data are glued. The
+!concatenated headers and pieces of data are separated with the
+!sentinel byte, if the latter is not zero.
+
+We concatenate \texttt{Sequences} only if the input slice has more
+than one element. In the case of one-element slice, we just return the
+only element. If the slice is empty, we notify the user.
 #+end_export
-#+begin_src go <<Concatenate fasta entries>>=
-  s = sc.Sequence()
-  s.KeepOnlyATGC()
-  if numSeq >= 1 {
-	  h = append(h, sentinelHeader)
-	  d = append(d, sentinelData)
+#+begin_src go <<Functions>>=
+  func Concatenate(seqSlice []*Sequence, sentinel byte) *Sequence {
+	  l := len(seqSlice)
+	  switch {
+	  case l > 1:
+		  //<<Perform the concatenation>>
+	  case l == 1:
+		  return seqSlice[0]
+	  default:
+		  fmt.Fprintln(os.Stderr,
+			  "fasta.Concatenate: the input slice is empty")
+		  return nil
+	  }
   }
-  h = append(h, []byte(s.Header())...)
-  d = append(d, s.Data()...)
+#+end_src
+#+begin_export latex
+We import \texttt{fmt}.
+#+end_export
+#+begin_src go <<Imports>>=
+  "fmt"
+#+end_src
+#+begin_export latex
+We get the first header and piece of data, then we append subsequent
+headers and data to them while traversing the original slice. If
+there's a non-zero sentinel byte, we append it in the beginning of
+each iteration.
+#+end_export
+#+begin_src go <<Perform the concatenation>>=
+  h := []byte(seqSlice[0].Header())
+  d := seqSlice[0].Data()
+  for i := 1; i < l; i++ {
+	  if sentinel != 0 {
+		  h = append(h, sentinel)
+		  d = append(d, sentinel)
+	  }
+	  h = append(h, []byte(seqSlice[i].Header())...)
+	  d = append(d, seqSlice[i].Data()...)
+  }
+  cSeq := NewSequence(string(h), d)
+  return cSeq
 #+end_src

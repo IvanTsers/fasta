@@ -4,6 +4,7 @@ package fasta
 import (
 	"bufio"
 	"bytes"
+	"fmt"
 	"io"
 	"math"
 	"math/rand"
@@ -156,8 +157,8 @@ func (s *Sequence) GC() float64 {
 	return gc / l
 }
 
-// Method KeepOnlyATGC removes non-canonical nucleotides from Sequence through reslicing (that is, keeps only ATGC/atgc).
-func (s *Sequence) KeepOnlyATGC() {
+// Method Clean removes non-canonical nucleotides from a Sequence (that is, keeps only ATGC/atgc) and converts what remains to uppercase.
+func (s *Sequence) Clean() {
 	d := s.Data()
 	i := 0
 	for _, c := range d {
@@ -168,6 +169,7 @@ func (s *Sequence) KeepOnlyATGC() {
 		}
 	}
 	d = d[:i]
+	d = bytes.ToUpper(d)
 	s.SetData(d)
 }
 
@@ -271,28 +273,39 @@ func NewScanner(r io.Reader) *Scanner {
 	return &scanner
 }
 
-// ReadAndConcatenate reads all sequences from a file and concatenates their headers and data tnto one Sequence entry. Sentinel bytes (if specified) are inserted between concatenated pieces of headers and data.
-func ReadAndConcatenate(f *os.File,
-	sentinelHeader byte,
-	sentinelData byte) *Sequence {
+// ReadAll reads all sequences from a file and returns a slice of Sequences.
+func ReadAll(f *os.File) []*Sequence {
 	sc := NewScanner(f)
-	s := sc.Sequence()
-	numSeq := 0
-	d := s.Data()
-	h := []byte(s.Header())
+	var s []*Sequence
 	for sc.ScanSequence() {
-		s = sc.Sequence()
-		s.KeepOnlyATGC()
-		if numSeq >= 1 {
-			h = append(h, sentinelHeader)
-			d = append(d, sentinelData)
-		}
-		h = append(h, []byte(s.Header())...)
-		d = append(d, s.Data()...)
-		numSeq += 1
+		s = append(s, sc.Sequence())
 	}
 	f.Close()
-	d = bytes.ToUpper(d)
-	cSeq := NewSequence(string(h), d)
-	return cSeq
+	return s
+}
+
+// Concatenate accepts a slice of Sequences and a sentinel byte. It concatenates the slice into a single Sequence entry, where all headers and data are glued. The concatenated headers and pieces of data are separated with the sentinel byte, if the latter is not zero.
+func Concatenate(seqSlice []*Sequence, sentinel byte) *Sequence {
+	l := len(seqSlice)
+	switch {
+	case l > 1:
+		h := []byte(seqSlice[0].Header())
+		d := seqSlice[0].Data()
+		for i := 1; i < l; i++ {
+			if sentinel != 0 {
+				h = append(h, sentinel)
+				d = append(d, sentinel)
+			}
+			h = append(h, []byte(seqSlice[i].Header())...)
+			d = append(d, seqSlice[i].Data()...)
+		}
+		cSeq := NewSequence(string(h), d)
+		return cSeq
+	case l == 1:
+		return seqSlice[0]
+	default:
+		fmt.Fprintln(os.Stderr,
+			"fasta.Concatenate: the input slice is empty")
+		return nil
+	}
 }

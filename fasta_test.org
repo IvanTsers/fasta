@@ -256,20 +256,20 @@ compare what we want with what we get.
   }
 #+end_src
 #+begin_export latex
-\subsubsection{Method \texttt{KeepOnlyATGC}}
+\subsubsection{Method \texttt{Clean}}
 To test this method, we generate a short sequence containing
 non-canonical nucleotides, call the method, and compare what we want
 with what we get.
 #+end_export
 #+begin_src go <<Testing functions>>=
-  func TestKeepOnlyATGC(t *testing.T){
+  func TestClean(t *testing.T){
 	  s := "XXATATNGTnCactAploenTTg"
-	  w := "ATATGTCactATTg"
+	  w := "ATATGTCACTATTG"
 	  seq := NewSequence("", []byte(s))
-	  seq.KeepOnlyATGC()
+	  seq.Clean()
 	  g := string(seq.Data())
 	  if g != w {
-		  t.Errorf("want:\n%s\nget:\n%s\n", w, g)
+		  t.Errorf("seq.Clean() want:\n%s\nget:\n%s\n", w, g)
 	  }
   }
 #+end_src
@@ -412,32 +412,66 @@ with what we get.
 #+end_src
 #+begin_export latex
 \subsection{High-level functions}
-\subsubsection{\texttt{ReadAndConcatenate}}
-To test \texttt{ReadAndConcatenate}, we read the test files
-(Table~\ref{tab:testfiles}).
+\subsubsection{\texttt{ReadAll}}
+To test \texttt{ReadAll}, we define expected lengths and read the test
+files (Table~\ref{tab:testfiles}).
 #+end_export
 #+begin_src go <<Testing functions>>=
-  func TestReadAndConcatenate(t *testing.T) {
-	  //<<Define expected values>>
-	  for i := 1; i <= 9; i++ {
+  func TestReadAll(t *testing.T) {
+	  expectedLen := [9]int{0, 0, 0, 5, 70, 140, 700, 1000, 1000}
+	  for i := 1; i < 9; i++ {
 		  name := "./data/seq" + strconv.Itoa(i) +
 			  ".fasta"
 		  f, err := os.Open(name)
 		  if err != nil {
 			  t.Errorf("couldn't open %q\n", name)
 		  }
-		  seq := ReadAndConcatenate(f, '|', '!')
-		  //<<Compare actual values to expected>>
+		  seqSlice := ReadAll(f)
+		  //<<Compare actual lengths to expected>>
 	  }
   }
 #+end_src
 #+begin_export latex
-We define arrays of expected values: number of bytes in the data,
-including sentinels, and anticipated contents of the headers.
+We compare what we want with what we get.
+#+end_export
+#+begin_src go <<Compare actual lengths to expected>>=
+  w := expectedLen[i-1]
+  for entry, seq := range(seqSlice) {
+	  g := len(seq.Data())
+	  if g != w {
+		  t.Errorf("seq%d, entry %d - want: %d\nget: %d",
+			  i, entry, w, g)
+	  }
+  }
+#+end_src
+#+begin_export latex
+\subsubsection{\texttt{Concatenate}}
+To test \texttt{Concatenate, we define expected values, read the test
+  files (Table~\ref{tab:testfiles}).
+#+end_export
+#+begin_src go <<Functions>>=
+  func TestConcatenate(t *testing.T) {
+	  //<<Define expected values>>
+	  for i := 1; i < 9; i++ {
+		  name := "./data/seq" + strconv.Itoa(i) +
+			  ".fasta"
+		  f, err := os.Open(name)
+		  if err != nil {
+			  t.Errorf("couldn't open %q\n", name)
+		  }
+		  seqSlice := ReadAll(f)
+		  seq := Concatenate(seqSlice)
+		  //<<Compare actual values to expected>>
+	  }
+  }
+  }
+#+end_src
+#+begin_export latex
+We define an array of expected number of bytes in the data (including
+sentinels) and the anticipated headers.
 #+end_export
 #+begin_src go <<Define expected values>>=
-  wantDataLen := [9]int{0, 0, 0, 5, 2*70+1, 2*140+1, 5*700+4, 5*1000+4,
-	  5*1000+4}
+  wantDataLen := [9]int{0, 0, 0, 5, 2*70 + 1, 2*140 + 1, 5*700 + 4, 5*1000 + 4}
   wantHeaders := [9]string{"",
 	  "",
 	  "seq3",
@@ -452,17 +486,17 @@ including sentinels, and anticipated contents of the headers.
 		  "G/C=0.50|Rand_4; G/C=0.50|Rand_5; G/C=0.50"}
 #+end_src
 #+begin_export latex
-We compare what we want with what we get.
+We compare the header and data we get with what we want.
 #+end_export
 #+begin_src go <<Compare actual values to expected>>=
   wl := wantDataLen[i-1]
   gl := seq.Length()
   if gl != wl {
-	  t.Errorf("%s Data:\nget:\n%d\nwant:\n%d\n", name, gl, wl)
+	  t.Errorf("%s data:\nget:\n%d\nwant:\n%d\n", name, gl, wl)
   }
   wh := wantHeaders[i-1]
   gh := seq.Header()
   if gh != wh {
-	  t.Errorf("Headers:\nget:\n%s\nwant:\n%s\n", gh, wh)
+	  t.Errorf("%s headers:\nget:\n%s\nwant:\n%s\n", name, gh, wh)
   }
 #+end_src

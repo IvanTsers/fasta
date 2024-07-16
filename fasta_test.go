@@ -117,14 +117,14 @@ func TestGC(t *testing.T) {
 		}
 	}
 }
-func TestKeepOnlyATGC(t *testing.T) {
+func TestClean(t *testing.T) {
 	s := "XXATATNGTnCactAploenTTg"
-	w := "ATATGTCactATTg"
+	w := "ATATGTCACTATTG"
 	seq := NewSequence("", []byte(s))
-	seq.KeepOnlyATGC()
+	seq.Clean()
 	g := string(seq.Data())
 	if g != w {
-		t.Errorf("want:\n%s\nget:\n%s\n", w, g)
+		t.Errorf("seq.Clean() want:\n%s\nget:\n%s\n", w, g)
 	}
 }
 func TestScanner(t *testing.T) {
@@ -182,38 +182,23 @@ func TestFlush(t *testing.T) {
 	}
 	f.Close()
 }
-func TestReadAndConcatenate(t *testing.T) {
-	wantDataLen := [9]int{0, 0, 0, 5, 2*70 + 1, 2*140 + 1, 5*700 + 4, 5*1000 + 4,
-		5*1000 + 4}
-	wantHeaders := [9]string{"",
-		"",
-		"seq3",
-		"Rand_1; G/C=0.20",
-		"Rand_1; G/C=0.41|Rand_2; G/C=0.54",
-		"Rand_1; G/C=0.50|Rand_2; G/C=0.50",
-		"Rand_1; G/C=0.50|Rand_2; G/C=0.50|Rand_3; " +
-			"G/C=0.50|Rand_4; G/C=0.50|Rand_5; G/C=0.50",
-		"Rand_1; G/C=0.50|Rand_2; G/C=0.50|Rand_3; " +
-			"G/C=0.50|Rand_4; G/C=0.50|Rand_5; G/C=0.50",
-		"Rand_1; G/C=0.50|Rand_2; G/C=0.50|Rand_3; " +
-			"G/C=0.50|Rand_4; G/C=0.50|Rand_5; G/C=0.50"}
-	for i := 1; i <= 9; i++ {
+func TestReadAll(t *testing.T) {
+	expectedLen := [9]int{0, 0, 0, 5, 70, 140, 700, 1000, 1000}
+	for i := 1; i < 9; i++ {
 		name := "./data/seq" + strconv.Itoa(i) +
 			".fasta"
 		f, err := os.Open(name)
 		if err != nil {
 			t.Errorf("couldn't open %q\n", name)
 		}
-		seq := ReadAndConcatenate(f, '|', '!')
-		wl := wantDataLen[i-1]
-		gl := seq.Length()
-		if gl != wl {
-			t.Errorf("%s Data:\nget:\n%d\nwant:\n%d\n", name, gl, wl)
-		}
-		wh := wantHeaders[i-1]
-		gh := seq.Header()
-		if gh != wh {
-			t.Errorf("Headers:\nget:\n%s\nwant:\n%s\n", gh, wh)
+		seqSlice := ReadAll(f)
+		w := expectedLen[i-1]
+		for entry, seq := range seqSlice {
+			g := len(seq.Data())
+			if g != w {
+				t.Errorf("seq%d, entry %d - want: %d\nget: %d",
+					i, entry, w, g)
+			}
 		}
 	}
 }
