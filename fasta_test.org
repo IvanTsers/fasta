@@ -219,7 +219,7 @@
     }
   }
 #+end_src
-#+begin_export latex
+#+begin_src latex
   \subsubsection{Method \texttt{Length}}
   We generate a five-nucleotide sequence, measure its length, and
   compare what we want to that we get.
@@ -235,7 +235,7 @@
 	  }
   }
 #+end_src
-#+begin_export latex
+#+begin_src latex
 \subsubsection{Method \texttt{GC}}
 We generate some short sequences, measure their GC content, and
 compare what we want with what we get.
@@ -255,7 +255,7 @@ compare what we want with what we get.
 	  }
   }
 #+end_src
-#+begin_export latex
+#+begin_src latex
 \subsubsection{Method \texttt{Clean}}
 To test this method, we generate a short sequence containing
 non-canonical nucleotides, call the method, and compare what we want
@@ -264,9 +264,27 @@ with what we get.
 #+begin_src go <<Testing functions>>=
   func TestClean(t *testing.T){
 	  s := "XXATATNGTnCactAploenTTg"
-	  w := "ATATGTCACTATTG"
+	  w := "ATATGTCactATTg"
 	  seq := NewSequence("", []byte(s))
 	  seq.Clean()
+	  g := string(seq.Data())
+	  if g != w {
+		  t.Errorf("seq.Clean() want:\n%s\nget:\n%s\n", w, g)
+	  }
+  }
+#+end_src
+#+begin_src latex
+\subsubsection{Method \texttt{DataToUpper}}
+To test this method, we generate a short sequence containing
+lowercase nucleotides, call the method, and compare what we want
+with what we get.
+#+end_src
+#+begin_src go <<Testing functions>>=
+  func TestDataToUpper(t *testing.T){
+	  s := "XXATATNGTnCactAploenTTg"
+	  w := "XXATATNGTNCACTAPLOENTTG"
+	  seq := NewSequence("", []byte(s))
+	  seq.DataToUpper()
 	  g := string(seq.Data())
 	  if g != w {
 		  t.Errorf("seq.Clean() want:\n%s\nget:\n%s\n", w, g)
@@ -410,12 +428,12 @@ with what we get.
   }
   f.Close()
 #+end_src
-#+begin_export latex
+#+begin_src latex
 \subsection{High-level functions}
 \subsubsection{\texttt{ReadAll}}
 To test \texttt{ReadAll}, we define expected lengths and read the test
 files (Table~\ref{tab:testfiles}).
-#+end_export
+#+end_src
 #+begin_src go <<Testing functions>>=
   func TestReadAll(t *testing.T) {
 	  expectedLen := [9]int{0, 0, 0, 5, 70, 140, 700, 1000, 1000}
@@ -431,9 +449,9 @@ files (Table~\ref{tab:testfiles}).
 	  }
   }
 #+end_src
-#+begin_export latex
+#+begin_src latex
 We compare what we want with what we get.
-#+end_export
+#+end_src
 #+begin_src go <<Compare actual lengths to expected>>=
   w := expectedLen[i-1]
   for entry, seq := range(seqSlice) {
@@ -444,11 +462,11 @@ We compare what we want with what we get.
 	  }
   }
 #+end_src
-#+begin_export latex
+#+begin_src latex
 \subsubsection{\texttt{Concatenate}}
-To test \texttt{Concatenate, we define expected values, read the test
+To test \texttt{Concatenate}, we define expected values, read the test
   files (Table~\ref{tab:testfiles}).
-#+end_export
+#+end_src
 #+begin_src go <<Functions>>=
   func TestConcatenate(t *testing.T) {
 	  //<<Define expected values>>
@@ -466,10 +484,10 @@ To test \texttt{Concatenate, we define expected values, read the test
   }
   }
 #+end_src
-#+begin_export latex
+#+begin_src latex
 We define an array of expected number of bytes in the data (including
 sentinels) and the anticipated headers.
-#+end_export
+#+end_src
 #+begin_src go <<Define expected values>>=
   wantDataLen := [9]int{0, 0, 0, 5, 2*70 + 1, 2*140 + 1, 5*700 + 4, 5*1000 + 4}
   wantHeaders := [9]string{"",
@@ -485,9 +503,9 @@ sentinels) and the anticipated headers.
 	  "Rand_1; G/C=0.50|Rand_2; G/C=0.50|Rand_3; " +
 		  "G/C=0.50|Rand_4; G/C=0.50|Rand_5; G/C=0.50"}
 #+end_src
-#+begin_export latex
+#+begin_src latex
 We compare the header and data we get with what we want.
-#+end_export
+#+end_src
 #+begin_src go <<Compare actual values to expected>>=
   wl := wantDataLen[i-1]
   gl := seq.Length()

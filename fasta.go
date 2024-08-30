@@ -157,7 +157,7 @@ func (s *Sequence) GC() float64 {
 	return gc / l
 }
 
-// Method Clean removes non-canonical nucleotides from a Sequence (that is, keeps only ATGC/atgc) and converts what remains to uppercase.
+// Method Clean removes non-canonical nucleotides from a Sequence (that is, keeps only ATGC/atgc).
 func (s *Sequence) Clean() {
 	d := s.Data()
 	i := 0
@@ -169,6 +169,12 @@ func (s *Sequence) Clean() {
 		}
 	}
 	d = d[:i]
+	s.SetData(d)
+}
+
+// Method DataToUpper converts Data bytes to uppercase.
+func (s *Sequence) DataToUpper() {
+	d := s.Data()
 	d = bytes.ToUpper(d)
 	s.SetData(d)
 }
@@ -202,7 +208,7 @@ func (s *Scanner) Line() []byte {
 	return s.line
 }
 
-// Flush returns any bytes remaining in the buffer after the  last call to ScanLine.
+//  Flush returns any bytes remaining in the buffer after the  last call to ScanLine.
 func (s *Scanner) Flush() []byte {
 	var dum []byte
 	if s.err == io.EOF {
@@ -233,7 +239,7 @@ func NewSequence(h string, d []byte) *Sequence {
 	return s
 }
 
-// ScanSequence reads input Sequence by Sequence.
+//  ScanSequence reads input Sequence by Sequence.
 func (s *Scanner) ScanSequence() bool {
 	if s.lastSequence {
 		return false

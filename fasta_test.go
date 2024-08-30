@@ -119,9 +119,19 @@ func TestGC(t *testing.T) {
 }
 func TestClean(t *testing.T) {
 	s := "XXATATNGTnCactAploenTTg"
-	w := "ATATGTCACTATTG"
+	w := "ATATGTCactATTg"
 	seq := NewSequence("", []byte(s))
 	seq.Clean()
+	g := string(seq.Data())
+	if g != w {
+		t.Errorf("seq.Clean() want:\n%s\nget:\n%s\n", w, g)
+	}
+}
+func TestDataToUpper(t *testing.T) {
+	s := "XXATATNGTnCactAploenTTg"
+	w := "XXATATNGTNCACTAPLOENTTG"
+	seq := NewSequence("", []byte(s))
+	seq.DataToUpper()
 	g := string(seq.Data())
 	if g != w {
 		t.Errorf("seq.Clean() want:\n%s\nget:\n%s\n", w, g)

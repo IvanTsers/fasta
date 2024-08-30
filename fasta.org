@@ -404,8 +404,7 @@ We declare the global dictionary variable.
 #+begin_export latex
 \subsection{Method \texttt{Clean}}
 !Method \texttt{Clean} removes non-canonical nucleotides from a
-!\texttt{Sequence} (that is, keeps only ATGC/atgc) and converts what
-!remains to uppercase.
+!\texttt{Sequence} (that is, keeps only ATGC/atgc).
 #+end_export
 #+begin_src go <<Methods>>=
   func (s *Sequence) Clean() {
@@ -419,6 +418,16 @@ We declare the global dictionary variable.
 	     }
 	  }
 	  d = d[:i]
+	  s.SetData(d)
+  }
+#+end_src
+#+begin_export latex
+\subsection{Method \texttt{DataToUpper}}
+!Method \texttt{DataToUpper} converts Data bytes to uppercase.
+#+end_export
+#+begin_src go <<Methods>>=
+  func (s *Sequence) DataToUpper() {
+	  d := s.Data()
 	  d = bytes.ToUpper(d)
 	  s.SetData(d)
   }
